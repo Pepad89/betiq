@@ -2,166 +2,136 @@
 <html lang="cs">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BetIQ — Sázecí Asistent</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BetIQ">
+<title>BetIQ</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
-
 :root {
-  --bg: #0a0d12;
-  --surface: #111520;
-  --surface2: #181e2e;
-  --border: #1f2840;
-  --accent: #00e5a0;
-  --accent-dim: rgba(0,229,160,0.12);
-  --accent-glow: rgba(0,229,160,0.25);
-  --warn: #f59e0b;
-  --danger: #ef4444;
-  --text: #e8eaf0;
-  --muted: #6b7a99;
-  --mono: 'Space Mono', monospace;
-  --sans: 'Space Grotesk', sans-serif;
+  --bg:#0a0d12;--surface:#111520;--surface2:#181e2e;--border:#1f2840;
+  --accent:#00e5a0;--accent-dim:rgba(0,229,160,0.12);--accent-glow:rgba(0,229,160,0.25);
+  --warn:#f59e0b;--danger:#ef4444;--text:#e8eaf0;--muted:#6b7a99;
+  --live:#ef4444;--mono:'Space Mono',monospace;--sans:'Space Grotesk',sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;display:flex;flex-direction:column;}
 
 /* HEADER */
-header{padding:16px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
-.logo-dot{width:10px;height:10px;background:var(--accent);border-radius:50%;box-shadow:0 0 12px var(--accent);animation:pulse 2s ease-in-out infinite;}
+header{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;position:sticky;top:0;background:rgba(10,13,18,0.95);backdrop-filter:blur(12px);z-index:50;}
+.logo-dot{width:9px;height:9px;background:var(--accent);border-radius:50%;box-shadow:0 0 10px var(--accent);animation:pulse 2s ease-in-out infinite;}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.6;transform:scale(.85);}}
-.logo-text{font-family:var(--mono);font-size:18px;font-weight:700;letter-spacing:.08em;color:var(--accent);}
-.logo-sub{font-size:12px;color:var(--muted);margin-left:4px;}
-.disclaimer-badge{margin-left:auto;font-size:11px;color:var(--warn);background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);padding:4px 10px;border-radius:20px;}
+.logo-text{font-family:var(--mono);font-size:17px;font-weight:700;color:var(--accent);}
+.logo-sub{font-size:11px;color:var(--muted);}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.refresh-btn{background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:6px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-family:var(--sans);transition:all .2s;}
+.refresh-btn:hover{border-color:var(--accent);color:var(--accent);}
 
-main{flex:1;max-width:920px;width:100%;margin:0 auto;padding:36px 20px 60px;}
+/* TABS */
+.tabs{display:flex;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:49px;z-index:40;}
+.tab{flex:1;padding:12px;text-align:center;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;transition:all .2s;}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.tab .live-dot{display:inline-block;width:6px;height:6px;background:var(--live);border-radius:50%;margin-right:5px;animation:pulse 1s ease-in-out infinite;}
 
-.hero{text-align:center;margin-bottom:40px;}
-.hero h1{font-size:clamp(26px,5vw,40px);font-weight:700;line-height:1.15;margin-bottom:12px;letter-spacing:-.02em;}
-.hero h1 span{color:var(--accent);}
-.hero p{color:var(--muted);font-size:14px;max-width:500px;margin:0 auto;line-height:1.7;}
+/* MAIN */
+main{flex:1;max-width:680px;width:100%;margin:0 auto;padding:16px 12px 80px;}
 
-/* INPUT CARD */
-.input-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:28px;}
-
-.sport-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;}
-.sport-tab{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:13px;cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:6px;color:var(--muted);}
-.sport-tab:hover{border-color:var(--accent);color:var(--text);}
-.sport-tab.active{background:var(--accent-dim);border-color:var(--accent);color:var(--accent);font-weight:600;}
-
-.match-inputs{display:grid;grid-template-columns:1fr 40px 1fr;gap:10px;align-items:end;margin-bottom:16px;}
-@media(max-width:560px){.match-inputs{grid-template-columns:1fr;}.vs-sep{display:none;}}
-.vs-sep{text-align:center;font-family:var(--mono);font-size:13px;color:var(--muted);padding-bottom:12px;}
-
-.field label{display:block;font-size:11px;font-family:var(--mono);letter-spacing:.08em;color:var(--muted);margin-bottom:7px;text-transform:uppercase;}
-
-/* AUTOCOMPLETE */
-.autocomplete-wrap{position:relative;}
-.autocomplete-wrap input{
-  width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;
-  padding:12px 14px;color:var(--text);font-family:var(--sans);font-size:14px;
-  transition:border-color .2s;outline:none;
-}
-.autocomplete-wrap input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim);}
-.autocomplete-wrap input::placeholder{color:var(--muted);}
-.autocomplete-wrap input.filled{border-color:rgba(0,229,160,.4);background:rgba(0,229,160,.03);}
-
-.dropdown{
-  position:absolute;top:calc(100% + 4px);left:0;right:0;
-  background:var(--surface2);border:1px solid var(--accent);border-radius:10px;
-  z-index:100;max-height:220px;overflow-y:auto;display:none;
-  box-shadow:0 8px 32px rgba(0,0,0,.5);
-}
-.dropdown.open{display:block;}
-.dropdown::-webkit-scrollbar{width:4px;}
-.dropdown::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
-
-.dd-item{
-  padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;
-  font-size:13px;border-bottom:1px solid var(--border);transition:background .12s;
-}
-.dd-item:last-child{border-bottom:none;}
-.dd-item:hover,.dd-item.focused{background:var(--accent-dim);color:var(--accent);}
-.dd-flag{font-size:18px;flex-shrink:0;}
-.dd-info{}
-.dd-name{font-weight:600;font-size:13px;}
-.dd-meta{font-size:11px;color:var(--muted);}
-.dd-no-result{padding:12px 14px;color:var(--muted);font-size:13px;text-align:center;}
-
-/* Extra fields row */
-.extra-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
-@media(max-width:560px){.extra-row{grid-template-columns:1fr;}}
-.field input,.field select{
-  width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;
-  padding:11px 14px;color:var(--text);font-family:var(--sans);font-size:14px;
-  transition:border-color .2s;outline:none;
-}
-.field input:focus,.field select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim);}
-.field input::placeholder{color:var(--muted);}
-.field select option{background:var(--surface2);}
-
-.analyze-btn{
-  width:100%;padding:14px;background:var(--accent);color:#0a0d12;
-  font-family:var(--sans);font-size:15px;font-weight:700;border:none;border-radius:10px;
-  cursor:pointer;letter-spacing:.03em;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;
-}
-.analyze-btn:hover:not(:disabled){background:#00ffb3;box-shadow:0 4px 24px var(--accent-glow);transform:translateY(-1px);}
-.analyze-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+/* SPORT FILTER */
+.sport-filter{display:flex;gap:6px;overflow-x:auto;padding:0 0 12px;scrollbar-width:none;margin-bottom:4px;}
+.sport-filter::-webkit-scrollbar{display:none;}
+.sf-btn{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:12px;color:var(--muted);cursor:pointer;white-space:nowrap;transition:all .18s;font-family:var(--sans);}
+.sf-btn.active{background:var(--accent-dim);border-color:var(--accent);color:var(--accent);font-weight:600;}
 
 /* LOADING */
-.loading-state{display:none;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:40px 28px;text-align:center;margin-bottom:28px;}
-.loading-state.active{display:block;}
-.spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 20px;}
+.loading{text-align:center;padding:60px 20px;color:var(--muted);}
+.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;}
 @keyframes spin{to{transform:rotate(360deg);}}
-.loading-steps{display:flex;flex-direction:column;gap:8px;max-width:320px;margin:16px auto 0;text-align:left;}
-.step{font-size:13px;color:var(--muted);padding:6px 12px;border-radius:6px;display:flex;align-items:center;gap:8px;transition:all .3s;}
-.step.done{color:var(--accent);background:var(--accent-dim);}
-.step.active{color:var(--text);}
 
-/* RESULT */
-.result-card{display:none;background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:28px;}
-.result-card.active{display:block;}
+/* MATCH CARDS */
+.section-label{font-size:11px;font-family:var(--mono);letter-spacing:.1em;color:var(--muted);text-transform:uppercase;padding:12px 4px 8px;display:flex;align-items:center;gap:8px;}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border);}
+.live-badge{background:var(--live);color:#fff;font-size:10px;padding:2px 7px;border-radius:10px;letter-spacing:.05em;animation:pulse 1.5s ease-in-out infinite;}
 
-.result-header{padding:18px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;}
-.match-title{font-size:17px;font-weight:600;letter-spacing:-.01em;}
-.sport-tag{font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--accent);background:var(--accent-dim);padding:4px 10px;border-radius:20px;white-space:nowrap;}
+.match-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:8px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
+.match-card:hover{border-color:var(--accent);background:var(--surface2);}
+.match-card.live{border-left:3px solid var(--live);}
+.match-card::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 60%,rgba(0,229,160,0.03));pointer-events:none;}
 
-.verdict-box{margin:20px 24px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:18px 22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
-.verdict-icon{font-size:32px;}
-.verdict-label{font-size:11px;font-family:var(--mono);letter-spacing:.08em;color:var(--muted);margin-bottom:4px;}
-.verdict-text{font-size:18px;font-weight:700;color:var(--accent);}
-.verdict-confidence{margin-left:auto;text-align:right;}
-.conf-label{font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:4px;}
-.conf-bar-wrap{width:110px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:6px;}
+.match-league{font-size:11px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.league-flag{font-size:14px;}
+
+.match-teams{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-bottom:8px;}
+.team{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;}
+.team-name{font-size:14px;font-weight:600;line-height:1.2;}
+.team.away .team-name{text-align:center;}
+.score-box{text-align:center;}
+.score{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--accent);letter-spacing:.05em;}
+.score.live-score{color:var(--live);}
+.match-time{font-size:11px;color:var(--muted);text-align:center;}
+.match-status{font-size:11px;font-family:var(--mono);}
+.match-status.live{color:var(--live);}
+.match-status.upcoming{color:var(--warn);}
+.match-status.finished{color:var(--muted);}
+
+.analyze-chip{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:var(--accent-dim);border:1px solid var(--accent);color:var(--accent);font-size:11px;font-weight:700;padding:5px 10px;border-radius:20px;opacity:0;transition:opacity .2s;white-space:nowrap;}
+.match-card:hover .analyze-chip{opacity:1;}
+
+.empty-state{text-align:center;padding:60px 20px;color:var(--muted);}
+.empty-state .icon{font-size:40px;margin-bottom:12px;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:100;display:none;align-items:flex-end;justify-content:center;}
+.modal-overlay.open{display:flex;}
+@media(min-width:600px){.modal-overlay{align-items:center;}}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:20px 20px 0 0;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;padding:20px;}
+@media(min-width:600px){.modal{border-radius:20px;}}
+
+.modal-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px;}
+.modal-match{background:var(--surface2);border-radius:12px;padding:14px;margin-bottom:16px;text-align:center;}
+.modal-teams{font-size:18px;font-weight:700;margin-bottom:4px;}
+.modal-meta{font-size:12px;color:var(--muted);}
+
+.modal-section{margin-bottom:14px;}
+.modal-label{font-size:11px;font-family:var(--mono);letter-spacing:.08em;color:var(--muted);text-transform:uppercase;margin-bottom:7px;}
+.modal-input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:11px 14px;color:var(--text);font-family:var(--sans);font-size:14px;outline:none;transition:border-color .2s;}
+.modal-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim);}
+.modal-input::placeholder{color:var(--muted);}
+
+.bet-chips{display:flex;gap:6px;flex-wrap:wrap;}
+.bet-chip{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:6px 12px;font-size:12px;color:var(--muted);cursor:pointer;transition:all .18s;}
+.bet-chip.active{background:var(--accent-dim);border-color:var(--accent);color:var(--accent);font-weight:600;}
+
+.modal-btn{width:100%;padding:13px;background:var(--accent);color:#0a0d12;font-family:var(--sans);font-size:15px;font-weight:700;border:none;border-radius:10px;cursor:pointer;margin-top:4px;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.modal-btn:hover:not(:disabled){background:#00ffb3;box-shadow:0 4px 20px var(--accent-glow);}
+.modal-btn:disabled{opacity:.5;cursor:not-allowed;}
+.modal-close{position:absolute;top:16px;right:16px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;}
+
+/* RESULT INSIDE MODAL */
+.result-section{margin-top:16px;border-top:1px solid var(--border);padding-top:16px;}
+.verdict-row{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.verdict-icon{font-size:28px;}
+.verdict-label{font-size:10px;font-family:var(--mono);color:var(--muted);letter-spacing:.06em;margin-bottom:3px;}
+.verdict-text{font-size:16px;font-weight:700;color:var(--accent);}
+.conf-right{margin-left:auto;text-align:right;}
+.conf-bar-wrap{width:80px;height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:4px;}
 .conf-bar{height:100%;background:var(--accent);border-radius:3px;transition:width 1s ease;width:0%;}
-.conf-val{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--accent);text-align:right;}
+.conf-val{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--accent);}
 
-.analysis-body{padding:0 24px 24px;}
-.section-title{font-size:11px;font-family:var(--mono);letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin:20px 0 10px;display:flex;align-items:center;gap:8px;}
-.section-title::after{content:'';flex:1;height:1px;background:var(--border);}
+.factors-wrap{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px;}
+.factor-pill{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:12px;display:flex;gap:7px;align-items:flex-start;}
+.factor-pill .fi{font-size:14px;}
+.factor-pill .fn{font-weight:600;font-size:11px;margin-bottom:1px;}
+.factor-pill .fv{font-size:11px;color:var(--muted);}
 
-.factors-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px;}
-.factor-pill{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;display:flex;align-items:flex-start;gap:8px;}
-.factor-pill .ficon{font-size:16px;margin-top:1px;}
-.factor-pill .fname{font-weight:600;margin-bottom:2px;font-size:12px;}
-.factor-pill .fval{font-size:12px;color:var(--muted);}
+.analysis-text{font-size:13px;line-height:1.8;color:var(--text);}
+.analysis-text p{margin-bottom:10px;}
 
-.analysis-text{font-size:14px;line-height:1.85;color:var(--text);white-space:pre-wrap;}
+.modal-loading{text-align:center;padding:30px;color:var(--muted);font-size:14px;}
 
-.risk-row{display:flex;align-items:center;gap:14px;margin-bottom:8px;}
-.risk-label{font-size:12px;color:var(--muted);min-width:90px;}
-.risk-bar-wrap{flex:1;height:7px;background:var(--border);border-radius:4px;overflow:hidden;}
-.risk-bar{height:100%;border-radius:4px;transition:width 1s ease;}
-.risk-val{font-family:var(--mono);font-size:12px;font-weight:700;min-width:36px;text-align:right;}
+.disclaimer-sm{background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);border-radius:8px;padding:10px 12px;font-size:11px;color:#a07030;margin-top:12px;line-height:1.6;}
 
-.sources-list{display:flex;flex-direction:column;gap:5px;}
-.source-item{font-size:12px;color:var(--muted);padding:6px 10px;background:var(--surface2);border-radius:6px;display:flex;align-items:center;gap:6px;}
-.source-item::before{content:'↗';color:var(--accent);}
-
-.disclaimer{background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:12px 16px;font-size:12px;color:#a07030;line-height:1.6;margin-top:20px;}
-.disclaimer strong{color:var(--warn);}
-
-.error-box{display:none;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:10px;padding:14px 18px;color:#fca5a5;font-size:14px;margin-bottom:20px;}
-.error-box.active{display:block;}
+.error-msg{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:8px;padding:12px;color:#fca5a5;font-size:13px;margin-top:10px;}
 </style>
 </head>
 <body>
@@ -169,617 +139,344 @@ main{flex:1;max-width:920px;width:100%;margin:0 auto;padding:36px 20px 60px;}
 <header>
   <div class="logo-dot"></div>
   <span class="logo-text">BetIQ</span>
-  <span class="logo-sub">/ AI Sázecí Asistent</span>
-  <span class="disclaimer-badge">⚠ Pouze vzdělávací účely</span>
+  <span class="logo-sub">/ Live</span>
+  <div class="header-right">
+    <button class="refresh-btn" onclick="loadMatches()">↺ Obnovit</button>
+  </div>
 </header>
 
+<div class="tabs">
+  <div class="tab active" id="tab-live" onclick="switchTab('live')">
+    <span class="live-dot"></span>Živé zápasy
+  </div>
+  <div class="tab" id="tab-upcoming" onclick="switchTab('upcoming')">
+    📅 Dnešní program
+  </div>
+</div>
+
 <main>
-  <div class="hero">
-    <h1>Analýza zápasu<br><span>poháněná AI & live daty</span></h1>
-    <p>Vyber sport, zadej týmy — AI prohledá aktuální zprávy o zraněních, formě, vzájemných výsledcích a dalších faktorech.</p>
+  <div class="sport-filter" id="sportFilter">
+    <button class="sf-btn active" data-sport="all" onclick="filterSport(this)">🌍 Vše</button>
+    <button class="sf-btn" data-sport="football" onclick="filterSport(this)">⚽ Fotbal</button>
   </div>
 
-  <div class="input-card">
-
-    <!-- Sport tabs -->
-    <div class="sport-tabs">
-      <button class="sport-tab active" data-sport="fotbal" onclick="selectSport(this)">⚽ Fotbal</button>
-      <button class="sport-tab" data-sport="hokej" onclick="selectSport(this)">🏒 Hokej</button>
-      <button class="sport-tab" data-sport="tenis" onclick="selectSport(this)">🎾 Tenis</button>
-      <button class="sport-tab" data-sport="basketbal" onclick="selectSport(this)">🏀 Basketbal</button>
-      <button class="sport-tab" data-sport="americký fotbal" onclick="selectSport(this)">🏈 NFL</button>
-      <button class="sport-tab" data-sport="baseball" onclick="selectSport(this)">⚾ Baseball</button>
-    </div>
-
-    <!-- Team inputs -->
-    <div class="match-inputs">
-      <div class="field">
-        <label>Tým / Hráč 1</label>
-        <div class="autocomplete-wrap">
-          <input type="text" id="team1Input" placeholder="Hledat tým..." autocomplete="off"
-            oninput="onTeamInput(this,'dd1','team1Val')"
-            onkeydown="onKeyDown(event,'dd1','team1Input','team1Val')"
-            onfocus="onTeamInput(this,'dd1','team1Val')"
-            onblur="setTimeout(()=>closeDD('dd1'),180)">
-          <div class="dropdown" id="dd1"></div>
-        </div>
-      </div>
-      <div class="vs-sep">vs</div>
-      <div class="field">
-        <label>Tým / Hráč 2</label>
-        <div class="autocomplete-wrap">
-          <input type="text" id="team2Input" placeholder="Hledat tým..." autocomplete="off"
-            oninput="onTeamInput(this,'dd2','team2Val')"
-            onkeydown="onKeyDown(event,'dd2','team2Input','team2Val')"
-            onfocus="onTeamInput(this,'dd2','team2Val')"
-            onblur="setTimeout(()=>closeDD('dd2'),180)">
-          <div class="dropdown" id="dd2"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Extra fields -->
-    <div class="extra-row">
-      <div class="field">
-        <label>Datum zápasu (nepovinné)</label>
-        <input type="text" id="matchdate" placeholder="např. 20.6.2026">
-      </div>
-      <div class="field">
-        <label>Typ sázky (nepovinné)</label>
-        <input type="text" id="bettype" placeholder="např. vítěz, over 2.5 gólů...">
-      </div>
-    </div>
-
-    <button class="analyze-btn" id="analyzeBtn" onclick="startAnalysis()">
-      🔍 Analyzovat zápas
-    </button>
-  </div>
-
-  <div class="loading-state" id="loadingState">
-    <div class="spinner"></div>
-    <p style="color:var(--muted);font-size:14px;">AI prohledává aktuální informace...</p>
-    <div class="loading-steps">
-      <div class="step" id="step1">🌐 Vyhledávání zpráv o zápase</div>
-      <div class="step" id="step2">🩺 Kontrola zranění a zdravotního stavu</div>
-      <div class="step" id="step3">📊 Analýza formy a statistik</div>
-      <div class="step" id="step4">🧠 Vyhodnocování všech faktorů</div>
-    </div>
-  </div>
-
-  <div class="error-box" id="errorBox"></div>
-
-  <div class="result-card" id="resultCard">
-    <div class="result-header">
-      <div class="match-title" id="matchTitle">—</div>
-      <div class="sport-tag" id="sportTag">—</div>
-    </div>
-    <div class="verdict-box">
-      <div class="verdict-icon" id="verdictIcon">🎯</div>
-      <div>
-        <div class="verdict-label">DOPORUČENÍ AI</div>
-        <div class="verdict-text" id="verdictText">—</div>
-      </div>
-      <div class="verdict-confidence">
-        <div class="conf-label">JISTOTA ANALÝZY</div>
-        <div class="conf-bar-wrap"><div class="conf-bar" id="confBar"></div></div>
-        <div class="conf-val" id="confVal">—</div>
-      </div>
-    </div>
-    <div class="analysis-body">
-      <div class="section-title">Klíčové faktory</div>
-      <div class="factors-grid" id="factorsGrid"></div>
-      <div class="section-title">Detailní analýza</div>
-      <div class="analysis-text" id="analysisText"></div>
-      <div class="section-title">Hodnocení rizika</div>
-      <div id="riskSection"></div>
-      <div class="section-title">Zdroje informací</div>
-      <div class="sources-list" id="sourcesList"></div>
-      <div class="disclaimer">
-        <strong>⚠ Upozornění:</strong> Tato analýza je pouze informační a vzdělávací. AI může mít neúplné informace. Sázení je hazardní hra — nikdy nesázej více, než si můžeš dovolit ztratit.
-      </div>
+  <div id="matchList">
+    <div class="loading">
+      <div class="spinner"></div>
+      <p>Načítám zápasy...</p>
     </div>
   </div>
 </main>
 
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+  <div class="modal" id="modal">
+    <div class="modal-handle"></div>
+
+    <div class="modal-match">
+      <div class="modal-teams" id="modalTeams">—</div>
+      <div class="modal-meta" id="modalMeta">—</div>
+    </div>
+
+    <div class="modal-section">
+      <div class="modal-label">Typ sázky</div>
+      <div class="bet-chips" id="betChips">
+        <div class="bet-chip active" onclick="selectChip(this,'Vítěz zápasu')">🏆 Vítěz</div>
+        <div class="bet-chip" onclick="selectChip(this,'Obě týmy skórují')">⚽ Obě skórují</div>
+        <div class="bet-chip" onclick="selectChip(this,'Over 2.5 gólů')">📊 Over 2.5</div>
+        <div class="bet-chip" onclick="selectChip(this,'Under 2.5 gólů')">📊 Under 2.5</div>
+        <div class="bet-chip" onclick="selectChip(this,'Asijský handicap')">🎯 Handicap</div>
+        <div class="bet-chip" onclick="selectChip(this,'Vlastní...')">✏️ Vlastní</div>
+      </div>
+      <input type="text" class="modal-input" id="betCustom" placeholder="nebo napiš vlastní typ sázky..." style="margin-top:8px;display:none;">
+    </div>
+
+    <button class="modal-btn" id="analyzeBtn" onclick="runAnalysis()">
+      🔍 Analyzovat zápas
+    </button>
+
+    <div id="analysisResult"></div>
+
+    <div class="disclaimer-sm">
+      ⚠️ Pouze pro vzdělávací účely. Sázení je hazardní hra.
+    </div>
+  </div>
+</div>
+
 <script>
-// ─── TEAMS DATABASE ───────────────────────────────────────────────────────────
-const TEAMS = {
-  fotbal: [
-    // Premier League
-    {name:"Manchester City",league:"Premier League",flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿"},
-    {name:"Arsenal",league:"Premier League",flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿"},
-    {name:"Liverpool",league:"Premier League",flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿"},
-    {name:"Chelsea",league:"Premier League",flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿"},
-    {name:"Manchester United",league:"Premier League",flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿"},
-    {name:"Tottenham Hotspur",league:"Premier League",flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿"},
-    {name:"Newcastle United",league:"Premier League",flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿"},
-    {name:"Aston Villa",league:"Premier League",flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿"},
-    {name:"West Ham United",league:"Premier League",flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿"},
-    {name:"Brighton",league:"Premier League",flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿"},
-    {name:"Everton",league:"Premier League",flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿"},
-    {name:"Brentford",league:"Premier League",flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿"},
-    {name:"Fulham",league:"Premier League",flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿"},
-    {name:"Crystal Palace",league:"Premier League",flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿"},
-    {name:"Wolverhampton",league:"Premier League",flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿"},
-    // La Liga
-    {name:"Real Madrid",league:"La Liga",flag:"🇪🇸"},
-    {name:"Barcelona",league:"La Liga",flag:"🇪🇸"},
-    {name:"Atletico Madrid",league:"La Liga",flag:"🇪🇸"},
-    {name:"Sevilla",league:"La Liga",flag:"🇪🇸"},
-    {name:"Real Betis",league:"La Liga",flag:"🇪🇸"},
-    {name:"Athletic Bilbao",league:"La Liga",flag:"🇪🇸"},
-    {name:"Real Sociedad",league:"La Liga",flag:"🇪🇸"},
-    {name:"Villarreal",league:"La Liga",flag:"🇪🇸"},
-    {name:"Valencia",league:"La Liga",flag:"🇪🇸"},
-    {name:"Osasuna",league:"La Liga",flag:"🇪🇸"},
-    // Bundesliga
-    {name:"Bayern München",league:"Bundesliga",flag:"🇩🇪"},
-    {name:"Borussia Dortmund",league:"Bundesliga",flag:"🇩🇪"},
-    {name:"RB Leipzig",league:"Bundesliga",flag:"🇩🇪"},
-    {name:"Bayer Leverkusen",league:"Bundesliga",flag:"🇩🇪"},
-    {name:"Eintracht Frankfurt",league:"Bundesliga",flag:"🇩🇪"},
-    {name:"Borussia M'gladbach",league:"Bundesliga",flag:"🇩🇪"},
-    {name:"Wolfsburg",league:"Bundesliga",flag:"🇩🇪"},
-    {name:"Schalke 04",league:"Bundesliga",flag:"🇩🇪"},
-    {name:"Hoffenheim",league:"Bundesliga",flag:"🇩🇪"},
-    {name:"Union Berlin",league:"Bundesliga",flag:"🇩🇪"},
-    // Serie A
-    {name:"Inter Milan",league:"Serie A",flag:"🇮🇹"},
-    {name:"AC Milan",league:"Serie A",flag:"🇮🇹"},
-    {name:"Juventus",league:"Serie A",flag:"🇮🇹"},
-    {name:"Napoli",league:"Serie A",flag:"🇮🇹"},
-    {name:"Roma",league:"Serie A",flag:"🇮🇹"},
-    {name:"Lazio",league:"Serie A",flag:"🇮🇹"},
-    {name:"Atalanta",league:"Serie A",flag:"🇮🇹"},
-    {name:"Fiorentina",league:"Serie A",flag:"🇮🇹"},
-    {name:"Torino",league:"Serie A",flag:"🇮🇹"},
-    {name:"Bologna",league:"Serie A",flag:"🇮🇹"},
-    // Ligue 1
-    {name:"Paris Saint-Germain",league:"Ligue 1",flag:"🇫🇷"},
-    {name:"Olympique Marseille",league:"Ligue 1",flag:"🇫🇷"},
-    {name:"Monaco",league:"Ligue 1",flag:"🇫🇷"},
-    {name:"Lyon",league:"Ligue 1",flag:"🇫🇷"},
-    {name:"Lille",league:"Ligue 1",flag:"🇫🇷"},
-    {name:"Nice",league:"Ligue 1",flag:"🇫🇷"},
-    {name:"Rennes",league:"Ligue 1",flag:"🇫🇷"},
-    {name:"Lens",league:"Ligue 1",flag:"🇫🇷"},
-    // Česká liga
-    {name:"Slavia Praha",league:"Fortuna liga",flag:"🇨🇿"},
-    {name:"Sparta Praha",league:"Fortuna liga",flag:"🇨🇿"},
-    {name:"Viktoria Plzeň",league:"Fortuna liga",flag:"🇨🇿"},
-    {name:"Baník Ostrava",league:"Fortuna liga",flag:"🇨🇿"},
-    {name:"Sigma Olomouc",league:"Fortuna liga",flag:"🇨🇿"},
-    {name:"Liberec",league:"Fortuna liga",flag:"🇨🇿"},
-    {name:"Jablonec",league:"Fortuna liga",flag:"🇨🇿"},
-    {name:"Bohemians 1905",league:"Fortuna liga",flag:"🇨🇿"},
-    {name:"Slovácko",league:"Fortuna liga",flag:"🇨🇿"},
-    {name:"Hradec Králové",league:"Fortuna liga",flag:"🇨🇿"},
-    // Slovenská liga
-    {name:"Slovan Bratislava",league:"Niké liga",flag:"🇸🇰"},
-    {name:"Spartak Trnava",league:"Niké liga",flag:"🇸🇰"},
-    {name:"DAC Dunajská Streda",league:"Niké liga",flag:"🇸🇰"},
-    {name:"Žilina",league:"Niké liga",flag:"🇸🇰"},
-    {name:"Ružomberok",league:"Niké liga",flag:"🇸🇰"},
-    // Champions League / international
-    {name:"Porto",league:"Primeira Liga",flag:"🇵🇹"},
-    {name:"Benfica",league:"Primeira Liga",flag:"🇵🇹"},
-    {name:"Sporting CP",league:"Primeira Liga",flag:"🇵🇹"},
-    {name:"Ajax",league:"Eredivisie",flag:"🇳🇱"},
-    {name:"PSV Eindhoven",league:"Eredivisie",flag:"🇳🇱"},
-    {name:"Feyenoord",league:"Eredivisie",flag:"🇳🇱"},
-    {name:"Celtic",league:"Scottish Premiership",flag:"🏴󠁧󠁢󠁳󠁣󠁴󠁿"},
-    {name:"Rangers",league:"Scottish Premiership",flag:"🏴󠁧󠁢󠁳󠁣󠁴󠁿"},
-    {name:"Shakhtar Donetsk",league:"Ukraine",flag:"🇺🇦"},
-    {name:"Galatasaray",league:"Süper Lig",flag:"🇹🇷"},
-    {name:"Fenerbahçe",league:"Süper Lig",flag:"🇹🇷"},
-    {name:"Besiktas",league:"Süper Lig",flag:"🇹🇷"},
-    // Národní týmy
-    {name:"Česká republika",league:"Národní tým",flag:"🇨🇿"},
-    {name:"Slovensko",league:"Národní tým",flag:"🇸🇰"},
-    {name:"Německo",league:"Národní tým",flag:"🇩🇪"},
-    {name:"Francie",league:"Národní tým",flag:"🇫🇷"},
-    {name:"Španělsko",league:"Národní tým",flag:"🇪🇸"},
-    {name:"Anglie",league:"Národní tým",flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿"},
-    {name:"Brazílie",league:"Národní tým",flag:"🇧🇷"},
-    {name:"Argentina",league:"Národní tým",flag:"🇦🇷"},
-    {name:"Itálie",league:"Národní tým",flag:"🇮🇹"},
-    {name:"Portugalsko",league:"Národní tým",flag:"🇵🇹"},
-    {name:"Nizozemsko",league:"Národní tým",flag:"🇳🇱"},
-    {name:"Belgie",league:"Národní tým",flag:"🇧🇪"},
-    {name:"Chorvatsko",league:"Národní tým",flag:"🇭🇷"},
-    {name:"Polsko",league:"Národní tým",flag:"🇵🇱"},
-    {name:"Maďarsko",league:"Národní tým",flag:"🇭🇺"},
-    {name:"Rakousko",league:"Národní tým",flag:"🇦🇹"},
-  ],
-  hokej: [
-    // NHL
-    {name:"Colorado Avalanche",league:"NHL",flag:"🇺🇸"},
-    {name:"Tampa Bay Lightning",league:"NHL",flag:"🇺🇸"},
-    {name:"Boston Bruins",league:"NHL",flag:"🇺🇸"},
-    {name:"New York Rangers",league:"NHL",flag:"🇺🇸"},
-    {name:"Toronto Maple Leafs",league:"NHL",flag:"🇨🇦"},
-    {name:"Edmonton Oilers",league:"NHL",flag:"🇨🇦"},
-    {name:"Vegas Golden Knights",league:"NHL",flag:"🇺🇸"},
-    {name:"Dallas Stars",league:"NHL",flag:"🇺🇸"},
-    {name:"Pittsburgh Penguins",league:"NHL",flag:"🇺🇸"},
-    {name:"Carolina Hurricanes",league:"NHL",flag:"🇺🇸"},
-    {name:"Florida Panthers",league:"NHL",flag:"🇺🇸"},
-    {name:"Washington Capitals",league:"NHL",flag:"🇺🇸"},
-    {name:"Minnesota Wild",league:"NHL",flag:"🇺🇸"},
-    {name:"Calgary Flames",league:"NHL",flag:"🇨🇦"},
-    {name:"Vancouver Canucks",league:"NHL",flag:"🇨🇦"},
-    {name:"Montreal Canadiens",league:"NHL",flag:"🇨🇦"},
-    {name:"Ottawa Senators",league:"NHL",flag:"🇨🇦"},
-    // Česká extraliga
-    {name:"HC Sparta Praha",league:"Extraliga",flag:"🇨🇿"},
-    {name:"HC Oceláři Třinec",league:"Extraliga",flag:"🇨🇿"},
-    {name:"HC Kometa Brno",league:"Extraliga",flag:"🇨🇿"},
-    {name:"HC Mountfield HK",league:"Extraliga",flag:"🇨🇿"},
-    {name:"HC Dynamo Pardubice",league:"Extraliga",flag:"🇨🇿"},
-    {name:"Bílí Tygři Liberec",league:"Extraliga",flag:"🇨🇿"},
-    {name:"HC Vítkovice",league:"Extraliga",flag:"🇨🇿"},
-    {name:"PSG Berani Zlín",league:"Extraliga",flag:"🇨🇿"},
-    // Slovenská extraliga
-    {name:"HC Slovan Bratislava",league:"Tipos extraliga",flag:"🇸🇰"},
-    {name:"HC Košice",league:"Tipos extraliga",flag:"🇸🇰"},
-    {name:"MHk 32 Liptovský Mikuláš",league:"Tipos extraliga",flag:"🇸🇰"},
-    // Národní týmy
-    {name:"Česká republika",league:"Národní tým",flag:"🇨🇿"},
-    {name:"Slovensko",league:"Národní tým",flag:"🇸🇰"},
-    {name:"Kanada",league:"Národní tým",flag:"🇨🇦"},
-    {name:"USA",league:"Národní tým",flag:"🇺🇸"},
-    {name:"Rusko",league:"Národní tým",flag:"🇷🇺"},
-    {name:"Finsko",league:"Národní tým",flag:"🇫🇮"},
-    {name:"Švédsko",league:"Národní tým",flag:"🇸🇪"},
-    {name:"Německo",league:"Národní tým",flag:"🇩🇪"},
-    {name:"Švýcarsko",league:"Národní tým",flag:"🇨🇭"},
-  ],
-  tenis: [
-    {name:"Novak Djokovic",league:"ATP",flag:"🇷🇸"},
-    {name:"Carlos Alcaraz",league:"ATP",flag:"🇪🇸"},
-    {name:"Jannik Sinner",league:"ATP",flag:"🇮🇹"},
-    {name:"Daniil Medvedev",league:"ATP",flag:"🇷🇺"},
-    {name:"Alexander Zverev",league:"ATP",flag:"🇩🇪"},
-    {name:"Andrey Rublev",league:"ATP",flag:"🇷🇺"},
-    {name:"Holger Rune",league:"ATP",flag:"🇩🇰"},
-    {name:"Stefanos Tsitsipas",league:"ATP",flag:"🇬🇷"},
-    {name:"Casper Ruud",league:"ATP",flag:"🇳🇴"},
-    {name:"Taylor Fritz",league:"ATP",flag:"🇺🇸"},
-    {name:"Tommy Paul",league:"ATP",flag:"🇺🇸"},
-    {name:"Grigor Dimitrov",league:"ATP",flag:"🇧🇬"},
-    {name:"Jiří Lehečka",league:"ATP",flag:"🇨🇿"},
-    {name:"Tomáš Macháč",league:"ATP",flag:"🇨🇿"},
-    {name:"Iga Świątek",league:"WTA",flag:"🇵🇱"},
-    {name:"Aryna Sabalenka",league:"WTA",flag:"🇧🇾"},
-    {name:"Coco Gauff",league:"WTA",flag:"🇺🇸"},
-    {name:"Elena Rybakina",league:"WTA",flag:"🇰🇿"},
-    {name:"Jessica Pegula",league:"WTA",flag:"🇺🇸"},
-    {name:"Barbora Krejčíková",league:"WTA",flag:"🇨🇿"},
-    {name:"Karolína Muchová",league:"WTA",flag:"🇨🇿"},
-    {name:"Markéta Vondroušová",league:"WTA",flag:"🇨🇿"},
-  ],
-  basketbal: [
-    {name:"Boston Celtics",league:"NBA",flag:"🇺🇸"},
-    {name:"Golden State Warriors",league:"NBA",flag:"🇺🇸"},
-    {name:"Los Angeles Lakers",league:"NBA",flag:"🇺🇸"},
-    {name:"Milwaukee Bucks",league:"NBA",flag:"🇺🇸"},
-    {name:"Miami Heat",league:"NBA",flag:"🇺🇸"},
-    {name:"Phoenix Suns",league:"NBA",flag:"🇺🇸"},
-    {name:"Denver Nuggets",league:"NBA",flag:"🇺🇸"},
-    {name:"Dallas Mavericks",league:"NBA",flag:"🇺🇸"},
-    {name:"Philadelphia 76ers",league:"NBA",flag:"🇺🇸"},
-    {name:"Brooklyn Nets",league:"NBA",flag:"🇺🇸"},
-    {name:"Chicago Bulls",league:"NBA",flag:"🇺🇸"},
-    {name:"Cleveland Cavaliers",league:"NBA",flag:"🇺🇸"},
-    {name:"Memphis Grizzlies",league:"NBA",flag:"🇺🇸"},
-    {name:"New Orleans Pelicans",league:"NBA",flag:"🇺🇸"},
-    {name:"Sacramento Kings",league:"NBA",flag:"🇺🇸"},
-  ],
-  'americký fotbal': [
-    {name:"Kansas City Chiefs",league:"NFL",flag:"🇺🇸"},
-    {name:"San Francisco 49ers",league:"NFL",flag:"🇺🇸"},
-    {name:"Philadelphia Eagles",league:"NFL",flag:"🇺🇸"},
-    {name:"Dallas Cowboys",league:"NFL",flag:"🇺🇸"},
-    {name:"Buffalo Bills",league:"NFL",flag:"🇺🇸"},
-    {name:"Cincinnati Bengals",league:"NFL",flag:"🇺🇸"},
-    {name:"Los Angeles Rams",league:"NFL",flag:"🇺🇸"},
-    {name:"Las Vegas Raiders",league:"NFL",flag:"🇺🇸"},
-    {name:"Green Bay Packers",league:"NFL",flag:"🇺🇸"},
-    {name:"Baltimore Ravens",league:"NFL",flag:"🇺🇸"},
-    {name:"Miami Dolphins",league:"NFL",flag:"🇺🇸"},
-    {name:"New York Giants",league:"NFL",flag:"🇺🇸"},
-    {name:"Seattle Seahawks",league:"NFL",flag:"🇺🇸"},
-    {name:"Pittsburgh Steelers",league:"NFL",flag:"🇺🇸"},
-    {name:"New England Patriots",league:"NFL",flag:"🇺🇸"},
-  ],
-  baseball: [
-    {name:"New York Yankees",league:"MLB",flag:"🇺🇸"},
-    {name:"Los Angeles Dodgers",league:"MLB",flag:"🇺🇸"},
-    {name:"Houston Astros",league:"MLB",flag:"🇺🇸"},
-    {name:"Atlanta Braves",league:"MLB",flag:"🇺🇸"},
-    {name:"Boston Red Sox",league:"MLB",flag:"🇺🇸"},
-    {name:"Chicago Cubs",league:"MLB",flag:"🇺🇸"},
-    {name:"San Francisco Giants",league:"MLB",flag:"🇺🇸"},
-    {name:"Toronto Blue Jays",league:"MLB",flag:"🇨🇦"},
-    {name:"Seattle Mariners",league:"MLB",flag:"🇺🇸"},
-    {name:"San Diego Padres",league:"MLB",flag:"🇺🇸"},
-  ]
-};
+let currentTab = 'live';
+let currentSport = 'all';
+let allMatches = [];
+let selectedMatch = null;
+let selectedBet = 'Vítěz zápasu';
 
-// ─── STATE ────────────────────────────────────────────────────────────────────
-let currentSport = 'fotbal';
-let team1Val = '';
-let team2Val = '';
-let ddFocus = { dd1: -1, dd2: -1 };
+// ── TAB SWITCH ──────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  currentTab = tab;
+  document.getElementById('tab-live').classList.toggle('active', tab==='live');
+  document.getElementById('tab-upcoming').classList.toggle('active', tab==='upcoming');
+  loadMatches();
+}
 
-// ─── SPORT SELECTION ──────────────────────────────────────────────────────────
-function selectSport(btn) {
-  document.querySelectorAll('.sport-tab').forEach(t => t.classList.remove('active'));
+// ── SPORT FILTER ─────────────────────────────────────────────────────────────
+function filterSport(btn) {
+  document.querySelectorAll('.sf-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   currentSport = btn.dataset.sport;
-  // Clear team inputs
-  document.getElementById('team1Input').value = '';
-  document.getElementById('team2Input').value = '';
-  document.getElementById('team1Input').classList.remove('filled');
-  document.getElementById('team2Input').classList.remove('filled');
-  team1Val = '';
-  team2Val = '';
-  closeDD('dd1'); closeDD('dd2');
+  renderMatches();
 }
 
-// ─── AUTOCOMPLETE ─────────────────────────────────────────────────────────────
-function getTeams() {
-  return TEAMS[currentSport] || [];
+// ── LOAD MATCHES ─────────────────────────────────────────────────────────────
+async function loadMatches() {
+  document.getElementById('matchList').innerHTML = `<div class="loading"><div class="spinner"></div><p>Načítám zápasy...</p></div>`;
+  try {
+    const res = await fetch(`/api/matches?type=${currentTab}`);
+    const data = await res.json();
+    allMatches = parseMatches(data);
+    renderMatches();
+  } catch(e) {
+    document.getElementById('matchList').innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><p>Nepodařilo se načíst zápasy.<br><small style="color:var(--muted)">${e.message}</small></p></div>`;
+  }
 }
 
-function onTeamInput(input, ddId, valKey) {
-  const q = input.value.trim().toLowerCase();
-  const dd = document.getElementById(ddId);
-  ddFocus[ddId] = -1;
+// ── PARSE API RESPONSE ────────────────────────────────────────────────────────
+function parseMatches(data) {
+  // Free API Live Football Data response format
+  try {
+    const matches = [];
+    // Try different response shapes
+    const items = data.response || data.data || data.matches || data.fixtures || data.livescores || [];
+    
+    if(!Array.isArray(items) || items.length === 0) {
+      // Try nested
+      const nested = data.response?.fixtures || data.response?.livescores || [];
+      if(Array.isArray(nested)) items.push(...nested);
+    }
 
-  if(!q) {
-    // Show first 8 teams
-    renderDD(dd, getTeams().slice(0,8), input, valKey);
-    dd.classList.add('open');
+    (Array.isArray(items) ? items : []).forEach(item => {
+      // Normalize different field names
+      const home = item.home?.name || item.homeTeam?.name || item.home_team?.name || item.teams?.home?.name || 'Domácí';
+      const away = item.away?.name || item.awayTeam?.name || item.away_team?.name || item.teams?.away?.name || 'Hosté';
+      const homeScore = item.home?.score ?? item.score?.home ?? item.goals?.home ?? item.homeScore ?? '–';
+      const awayScore = item.away?.score ?? item.score?.away ?? item.goals?.away ?? item.awayScore ?? '–';
+      const league = item.league?.name || item.competition?.name || item.tournament?.name || item.leagueName || 'Fotbal';
+      const country = item.league?.country || item.country?.name || '';
+      const status = item.status?.short || item.status || item.statusShort || 'NS';
+      const minute = item.status?.elapsed || item.elapsed || item.minute || null;
+      const time = item.fixture?.date || item.date || item.datetime || '';
+
+      matches.push({ home, away, homeScore, awayScore, league, country, status, minute, time, raw: item });
+    });
+
+    return matches;
+  } catch(e) {
+    console.error('Parse error:', e);
+    return [];
+  }
+}
+
+// ── STATUS HELPERS ────────────────────────────────────────────────────────────
+function isLive(s) { return ['1H','2H','HT','ET','P','LIVE','IN_PLAY','inprogress'].includes(s); }
+function isFinished(s) { return ['FT','AET','PEN','FINISHED','finished'].includes(s); }
+function formatTime(dateStr) {
+  if(!dateStr) return '';
+  try { return new Date(dateStr).toLocaleTimeString('cs-CZ',{hour:'2-digit',minute:'2-digit'}); }
+  catch(e) { return dateStr; }
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function renderMatches() {
+  const list = document.getElementById('matchList');
+  let matches = allMatches;
+
+  if(matches.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="icon">${currentTab==='live'?'📡':'📅'}</div><p>${currentTab==='live'?'Žádné živé zápasy právě teď.':'Žádné zápasy dnes.'}</p></div>`;
     return;
   }
 
-  const results = getTeams().filter(t =>
-    t.name.toLowerCase().includes(q) ||
-    t.league.toLowerCase().includes(q)
-  ).slice(0,10);
+  const live = matches.filter(m => isLive(m.status));
+  const upcoming = matches.filter(m => !isLive(m.status) && !isFinished(m.status));
+  const finished = matches.filter(m => isFinished(m.status));
 
-  if(results.length === 0) {
-    dd.innerHTML = `<div class="dd-no-result">Žádný tým nenalezen — zkus napsat ručně</div>`;
-    dd.classList.add('open');
-    // Allow freetext
-    if(valKey==='team1Val') team1Val = input.value.trim();
-    else team2Val = input.value.trim();
+  let html = '';
+
+  if(currentTab === 'live') {
+    if(live.length) {
+      html += `<div class="section-label"><span class="live-badge">ŽIVĚ</span> ${live.length} zápasů</div>`;
+      html += live.map((m,i) => matchCard(m, i, true)).join('');
+    }
+    if(finished.length) {
+      html += `<div class="section-label">Ukončené</div>`;
+      html += finished.map((m,i) => matchCard(m, i+live.length, false)).join('');
+    }
+    if(!live.length && !finished.length) {
+      html = `<div class="empty-state"><div class="icon">📡</div><p>Žádné živé zápasy právě teď.<br><small style="color:var(--muted)">Zkus přepnout na Dnešní program</small></p></div>`;
+    }
   } else {
-    renderDD(dd, results, input, valKey);
-    dd.classList.add('open');
-  }
-}
-
-function renderDD(dd, items, input, valKey) {
-  dd.innerHTML = items.map((t,i) =>
-    `<div class="dd-item" data-idx="${i}" onclick="selectTeam('${t.name.replace(/'/g,"\\'")}','${valKey}','${input.id}')">
-      <span class="dd-flag">${t.flag}</span>
-      <div class="dd-info">
-        <div class="dd-name">${t.name}</div>
-        <div class="dd-meta">${t.league}</div>
-      </div>
-    </div>`
-  ).join('');
-}
-
-function selectTeam(name, valKey, inputId) {
-  document.getElementById(inputId).value = name;
-  document.getElementById(inputId).classList.add('filled');
-  if(valKey==='team1Val') team1Val = name;
-  else team2Val = name;
-  const ddId = inputId==='team1Input' ? 'dd1' : 'dd2';
-  closeDD(ddId);
-}
-
-function closeDD(ddId) {
-  document.getElementById(ddId).classList.remove('open');
-}
-
-function onKeyDown(e, ddId, inputId, valKey) {
-  const dd = document.getElementById(ddId);
-  const items = dd.querySelectorAll('.dd-item');
-  if(!items.length) return;
-
-  if(e.key === 'ArrowDown') {
-    e.preventDefault();
-    ddFocus[ddId] = Math.min(ddFocus[ddId]+1, items.length-1);
-    items.forEach((el,i) => el.classList.toggle('focused', i===ddFocus[ddId]));
-  } else if(e.key === 'ArrowUp') {
-    e.preventDefault();
-    ddFocus[ddId] = Math.max(ddFocus[ddId]-1, 0);
-    items.forEach((el,i) => el.classList.toggle('focused', i===ddFocus[ddId]));
-  } else if(e.key === 'Enter' && ddFocus[ddId] >= 0) {
-    e.preventDefault();
-    items[ddFocus[ddId]].click();
-  } else if(e.key === 'Escape') {
-    closeDD(ddId);
-  }
-}
-
-// ─── ANALYSIS ─────────────────────────────────────────────────────────────────
-function setStep(n) {
-  for(let i=1;i<=4;i++){
-    const el = document.getElementById('step'+i);
-    if(i<n) el.className='step done';
-    else if(i===n) el.className='step active';
-    else el.className='step';
-  }
-}
-
-async function startAnalysis() {
-  // Allow freetext if not picked from dropdown
-  const t1 = team1Val || document.getElementById('team1Input').value.trim();
-  const t2 = team2Val || document.getElementById('team2Input').value.trim();
-  const matchdate = document.getElementById('matchdate').value.trim();
-  const bettype = document.getElementById('bettype').value.trim();
-
-  if(!t1 || !t2) {
-    showError('Prosím vyplň oba týmy / hráče.');
-    return;
+    if(upcoming.length) {
+      html += `<div class="section-label">Nadcházející</div>`;
+      html += upcoming.map((m,i) => matchCard(m, i, false)).join('');
+    }
+    if(live.length) {
+      html += `<div class="section-label"><span class="live-badge">ŽIVĚ</span></div>`;
+      html += live.map((m,i) => matchCard(m, i+upcoming.length, true)).join('');
+    }
+    if(finished.length) {
+      html += `<div class="section-label">Ukončené</div>`;
+      html += finished.map((m,i) => matchCard(m, i+upcoming.length+live.length, false)).join('');
+    }
   }
 
-  document.getElementById('errorBox').classList.remove('active');
-  document.getElementById('resultCard').classList.remove('active');
-  document.getElementById('loadingState').classList.add('active');
-  document.getElementById('analyzeBtn').disabled = true;
-  setStep(1);
+  list.innerHTML = html;
+}
 
-  const matchLabel = `${t1} vs ${t2}`;
-  document.getElementById('matchTitle').textContent = matchLabel;
-  const sportEmojis = {fotbal:'⚽',hokej:'🏒',tenis:'🎾',basketbal:'🏀','americký fotbal':'🏈',baseball:'⚾'};
-  document.getElementById('sportTag').textContent = (sportEmojis[currentSport]||'🏅') + ' ' + currentSport.charAt(0).toUpperCase()+currentSport.slice(1);
+function matchCard(m, idx, live) {
+  const scoreDisplay = (m.homeScore !== undefined && m.homeScore !== '–')
+    ? `<div class="score ${live?'live-score':''}">${m.homeScore}:${m.awayScore}</div>`
+    : `<div class="score" style="color:var(--muted);font-size:16px;">vs</div>`;
 
-  setTimeout(()=>setStep(2), 1200);
-  setTimeout(()=>setStep(3), 2800);
-  setTimeout(()=>setStep(4), 4200);
+  let statusText = '';
+  if(live) statusText = `<div class="match-status live">${m.minute ? m.minute+"'" : 'ŽIVĚ'}</div>`;
+  else if(isFinished(m.status)) statusText = `<div class="match-status finished">Konec</div>`;
+  else statusText = `<div class="match-status upcoming">${formatTime(m.time) || 'Dnes'}</div>`;
+
+  return `<div class="match-card ${live?'live':''}" onclick="openModal(${idx})">
+    <div class="match-league"><span class="league-flag">⚽</span>${m.league}${m.country?' · '+m.country:''}</div>
+    <div class="match-teams">
+      <div class="team"><div class="team-name">${m.home}</div></div>
+      <div class="score-box">${scoreDisplay}${statusText}</div>
+      <div class="team away"><div class="team-name">${m.away}</div></div>
+    </div>
+    <div class="analyze-chip">🔍 Analyzovat</div>
+  </div>`;
+}
+
+// ── MODAL ─────────────────────────────────────────────────────────────────────
+function openModal(idx) {
+  selectedMatch = allMatches[idx];
+  document.getElementById('modalTeams').textContent = `${selectedMatch.home} vs ${selectedMatch.away}`;
+  document.getElementById('modalMeta').textContent = `${selectedMatch.league} · ${isLive(selectedMatch.status) ? '🔴 ŽIVĚ ' + (selectedMatch.minute ? selectedMatch.minute+"'" : '') : formatTime(selectedMatch.time) || 'Dnes'}`;
+  document.getElementById('analysisResult').innerHTML = '';
+  document.getElementById('analyzeBtn').disabled = false;
+  // Reset chips
+  document.querySelectorAll('.bet-chip').forEach(c=>c.classList.remove('active'));
+  document.querySelector('.bet-chip').classList.add('active');
+  selectedBet = 'Vítěz zápasu';
+  document.getElementById('betCustom').style.display = 'none';
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function closeModalOutside(e) {
+  if(e.target === document.getElementById('modalOverlay')) closeModal();
+}
+
+function selectChip(chip, bet) {
+  document.querySelectorAll('.bet-chip').forEach(c=>c.classList.remove('active'));
+  chip.classList.add('active');
+  selectedBet = bet;
+  document.getElementById('betCustom').style.display = bet === 'Vlastní...' ? 'block' : 'none';
+}
+
+// ── ANALYSIS ──────────────────────────────────────────────────────────────────
+async function runAnalysis() {
+  if(!selectedMatch) return;
+  const btn = document.getElementById('analyzeBtn');
+  btn.disabled = true;
+  const betType = selectedBet === 'Vlastní...'
+    ? document.getElementById('betCustom').value.trim() || 'Vítěz zápasu'
+    : selectedBet;
+
+  document.getElementById('analysisResult').innerHTML = `<div class="modal-loading"><div class="spinner" style="margin:0 auto 12px;width:28px;height:28px;border-width:2px"></div>AI analyzuje zápas a hledá aktuální informace...</div>`;
 
   const today = new Date().toLocaleDateString('cs-CZ');
+  const isLiveMatch = isLive(selectedMatch.status);
+  const scoreInfo = isLiveMatch ? `Aktuální skóre: ${selectedMatch.homeScore}:${selectedMatch.awayScore} (${selectedMatch.minute ? selectedMatch.minute+"'" : 'ŽIVĚ'})` : '';
 
-  const systemPrompt = `Jsi expertní sportovní analytik a sázecí poradce. Pouzivej web search pro nalezeni aktualnich informaci o zapasu, zranenych hracich, forme tymu, pocasi a osobnich problemech hracu.
+  const systemPrompt = `Jsi expertni sportovni analytik. Pouzivej web search pro aktualni informace.
+Vrat POUZE validni JSON (bez markdown):
+{"verdict":"doporuceni max 55 znaku","confidence":72,"verdictIcon":"🎯","factors":[{"icon":"🩺","name":"Zraneni","value":"popis","type":"negative"}],"analysis":"analyza odstavce oddelene /par/","risks":[{"label":"Nejistota","value":45,"color":"#f59e0b"}],"sources":["zdroj 1"]}
+PRAVIDLA: zadne uvozovky uvnitr stringu, factors max 5, risks max 3, sources max 3, confidence 0-100. Datum: ${today}.`;
 
-Vrat odpoved POUZE jako validni JSON objekt (bez markdown, bez backticks, bez komentaru):
-{
-  "verdict": "kratke doporuceni max 55 znaku",
-  "confidence": 72,
-  "verdictIcon": "🎯",
-  "factors": [
-    {"icon":"🩺","name":"Zraneni","value":"popis max 40 znaku","type":"negative"},
-    {"icon":"📈","name":"Forma","value":"popis max 40 znaku","type":"positive"}
-  ],
-  "analysis": "Dve az tri odstavce analyzy oddelene lomitkem /par/. Zadne uvozovky uvnitr textu.",
-  "risks": [
-    {"label":"Nejistota","value":45,"color":"#f59e0b"}
-  ],
-  "sources": ["Zdroj 1","Zdroj 2","Zdroj 3"]
-}
-
-PRAVIDLA JSON:
-- Vsechny retezce bez uvozovek uvnitr, pouzij apostrofy
-- factors: max 6 polozek, type je positive/negative/neutral
-- risks: max 3 polozky, value 0-100
-- sources: max 4 polozky
-- analysis: jeden dlouhy retezec, odstavce oddeluj textem /par/
-- confidence: cele cislo 0-100
-- POUZE JSON, nic jineho
-
-Zkoumej: zraneni, formu poslednich 5 zapasu, vzajemne vysledky h2h, disciplinarni tresty, pocasi, psychologicke faktory, domaci/venkovni vyhodu, motivaci. Dnesni datum: ${today}.`;
-
-  const userMsg = `Analyzuj: ${matchLabel}
-Sport: ${currentSport}
-${matchdate ? 'Datum: '+matchdate : ''}
-${bettype ? 'Typ sazky: '+bettype : ''}
-Prohledej web a najdi aktualni informace. Vrat JSON analyzu.`;
+  const userMsg = `Analyzuj: ${selectedMatch.home} vs ${selectedMatch.away}
+Liga: ${selectedMatch.league}
+${scoreInfo}
+Typ sazky: ${betType}
+${isLiveMatch ? 'Zapas PRAVE PROBIHA - zohledni aktualni vyvoj.' : ''}
+Vrat JSON analyzu.`;
 
   try {
-    const resp = await fetch("/api/analyze", {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
+    const res = await fetch('/api/analyze', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
-        model: "claude-sonnet-4-6",
-        max_tokens: 1000,
+        model:'claude-sonnet-4-6',
+        max_tokens:1000,
         system: systemPrompt,
-        tools: [{ type: "web_search_20250305", name: "web_search" }],
-        messages: [{ role:"user", content: userMsg }]
+        tools:[{type:'web_search_20250305',name:'web_search'}],
+        messages:[{role:'user',content:userMsg}]
       })
     });
 
-    const data = await resp.json();
+    const data = await res.json();
     if(data.error) throw new Error(data.error.message);
 
-    const fullText = data.content
-      .map(b => b.type==='text' ? b.text : '')
-      .filter(Boolean).join('\n');
-
-    // Robust JSON extraction
+    const fullText = data.content.map(b=>b.type==='text'?b.text:'').filter(Boolean).join('\n');
     let clean = fullText.replace(/```json|```/g,'').trim();
-    const objMatch = clean.match(/\{[\s\S]*\}/);
-    if(!objMatch) throw new Error('AI nevrátila platný JSON. Zkus to znovu.');
-    clean = objMatch[0];
-    // Fix trailing commas
-    clean = clean.replace(/,(\s*[}\]])/g,'$1');
-
-    let result;
-    try { result = JSON.parse(clean); }
-    catch(e) {
-      console.error('JSON error:', e.message, '\n---\n', clean);
-      throw new Error('Chyba zpracování odpovědi: ' + e.message + '. Zkus to znovu.');
-    }
-
-    renderResult(result);
-
-  } catch(err) {
-    showError('Chyba: ' + err.message);
+    const obj = clean.match(/\{[\s\S]*\}/);
+    if(!obj) throw new Error('Neplatná odpověď AI');
+    clean = obj[0].replace(/,(\s*[}\]])/g,'$1');
+    const r = JSON.parse(clean);
+    renderAnalysis(r);
+  } catch(e) {
+    document.getElementById('analysisResult').innerHTML = `<div class="error-msg">Chyba: ${e.message}</div>`;
   } finally {
-    document.getElementById('loadingState').classList.remove('active');
-    document.getElementById('analyzeBtn').disabled = false;
+    btn.disabled = false;
   }
 }
 
-function renderResult(r) {
-  document.getElementById('verdictIcon').textContent = r.verdictIcon || '🎯';
-  document.getElementById('verdictText').textContent = r.verdict || '—';
-
-  const conf = Math.min(100, Math.max(0, r.confidence||50));
-  document.getElementById('confVal').textContent = conf+'%';
-  setTimeout(()=>{ document.getElementById('confBar').style.width = conf+'%'; },100);
-
-  const grid = document.getElementById('factorsGrid');
-  grid.innerHTML = '';
+function renderAnalysis(r) {
+  const conf = Math.min(100,Math.max(0,r.confidence||50));
   const colors = {positive:'#00e5a0',negative:'#ef4444',neutral:'#6b7a99'};
-  (r.factors||[]).forEach(f=>{
-    grid.innerHTML += `<div class="factor-pill">
-      <span class="ficon">${f.icon||'•'}</span>
-      <div>
-        <div class="fname" style="color:${colors[f.type]||colors.neutral}">${f.name}</div>
-        <div class="fval">${f.value}</div>
-      </div>
-    </div>`;
-  });
 
-  // Render analysis with paragraph breaks
-  const analysisEl = document.getElementById('analysisText');
+  const factors = (r.factors||[]).map(f=>`
+    <div class="factor-pill">
+      <span class="fi">${f.icon||'•'}</span>
+      <div><div class="fn" style="color:${colors[f.type]||colors.neutral}">${f.name}</div><div class="fv">${f.value}</div></div>
+    </div>`).join('');
+
   const parts = (r.analysis||'').split('/par/').map(p=>p.trim()).filter(Boolean);
-  analysisEl.innerHTML = parts.map(p=>`<p style="margin-bottom:12px">${p}</p>`).join('');
+  const analysisHtml = parts.map(p=>`<p>${p}</p>`).join('');
 
-  const riskSec = document.getElementById('riskSection');
-  riskSec.innerHTML = '';
-  (r.risks||[]).forEach(risk=>{
-    const val = Math.min(100,Math.max(0,risk.value||50));
-    riskSec.innerHTML += `<div class="risk-row">
-      <span class="risk-label">${risk.label}</span>
-      <div class="risk-bar-wrap"><div class="risk-bar" style="width:0%;background:${risk.color||'var(--accent)'}" data-target="${val}"></div></div>
-      <span class="risk-val" style="color:${risk.color||'var(--accent)'}">${val}%</span>
+  document.getElementById('analysisResult').innerHTML = `
+    <div class="result-section">
+      <div class="verdict-row">
+        <div class="verdict-icon">${r.verdictIcon||'🎯'}</div>
+        <div>
+          <div class="verdict-label">DOPORUČENÍ</div>
+          <div class="verdict-text">${r.verdict||'—'}</div>
+        </div>
+        <div class="conf-right">
+          <div class="conf-bar-wrap"><div class="conf-bar" id="cbar" style="width:0%"></div></div>
+          <div class="conf-val">${conf}%</div>
+        </div>
+      </div>
+      <div class="factors-wrap">${factors}</div>
+      <div class="analysis-text">${analysisHtml}</div>
     </div>`;
-  });
-  setTimeout(()=>{
-    document.querySelectorAll('.risk-bar[data-target]').forEach(b=>{b.style.width=b.getAttribute('data-target')+'%';});
-  },100);
 
-  const srcList = document.getElementById('sourcesList');
-  srcList.innerHTML = (r.sources||[]).map(s=>`<div class="source-item">${s}</div>`).join('');
-
-  document.getElementById('resultCard').classList.add('active');
-  document.getElementById('resultCard').scrollIntoView({behavior:'smooth',block:'start'});
+  setTimeout(()=>{ const b=document.getElementById('cbar'); if(b) b.style.width=conf+'%'; },100);
+  document.getElementById('modal').scrollTo({top:999,behavior:'smooth'});
 }
 
-function showError(msg) {
-  const box = document.getElementById('errorBox');
-  box.textContent = msg;
-  box.classList.add('active');
-  document.getElementById('loadingState').classList.remove('active');
-  document.getElementById('analyzeBtn').disabled = false;
-}
+// ── INIT ──────────────────────────────────────────────────────────────────────
+loadMatches();
+setInterval(()=>{ if(currentTab==='live') loadMatches(); }, 60000);
 </script>
 </body>
 </html>
