@@ -301,7 +301,7 @@ main{flex:1;max-width:680px;width:100%;margin:0 auto;padding:16px 12px 80px;}
     <button class="auth-btn" id="authMainBtn" onclick="authAction()">Přihlásit se</button>
     <div class="auth-switch" onclick="toggleAuthMode()">Nemáš účet? <span>Registrovat se</span></div>
     <div style="margin-top:12px;text-align:center;">
-      <button class="auth-btn secondary" onclick="closeAuth()" style="font-size:13px;padding:10px;">Pokračovat bez přihlášení</button>
+      <button class="auth-btn secondary" onclick="closeAuth();openPricing();" style="font-size:13px;padding:10px;">⚡ Zobrazit plány předplatného</button>
     </div>
   </div>
 </div>
@@ -350,6 +350,17 @@ main{flex:1;max-width:680px;width:100%;margin:0 auto;padding:16px 12px 80px;}
 </div>
 
 <!-- T&C MODAL -->
+<div class="auth-overlay" id="guestUpsellOverlay" onclick="if(event.target===this)document.getElementById('guestUpsellOverlay').classList.remove('open')">
+  <div class="auth-box" style="text-align:center;">
+    <div style="font-size:40px;margin-bottom:12px;">🔒</div>
+    <div class="auth-title">Vyčerpal jsi bezplatný limit</div>
+    <div class="auth-sub" style="margin-bottom:20px;">Využil jsi svou 1 bezplatnou analýzu. Přihlas se zdarma a získej až 8 analýz denně — nebo si předplať Premium pro neomezený přístup.</div>
+    <button class="auth-btn" onclick="document.getElementById('guestUpsellOverlay').classList.remove('open');openAuth();" style="margin-bottom:10px;">👤 Přihlásit se / Registrovat</button>
+    <button class="auth-btn" style="background:linear-gradient(135deg,#f59e0b,#ef4444);margin-bottom:10px;" onclick="document.getElementById('guestUpsellOverlay').classList.remove('open');openPricing();">⚡ Zobrazit plány</button>
+    <button class="auth-btn secondary" onclick="document.getElementById('guestUpsellOverlay').classList.remove('open');">Zavřít</button>
+  </div>
+</div>
+
 <div class="auth-overlay" id="termsOverlay">
   <div class="auth-box" style="max-height:80vh;overflow-y:auto;">
     <div class="auth-title" style="font-size:18px;margin-bottom:12px;">📋 Podmínky použití</div>
@@ -648,6 +659,7 @@ function updateHeader() {
 }
 
 // ── PRICING ───────────────────────────────────────────────────────────────────
+function openGuestUpsell() { document.getElementById('guestUpsellOverlay').classList.add('open'); }
 function openPricing() { document.getElementById('pricingOverlay').classList.add('open'); }
 function closePricing() { document.getElementById('pricingOverlay').classList.remove('open'); }
 function closePricingOutside(e) { if(e.target===document.getElementById('pricingOverlay')) closePricing(); }
@@ -1027,11 +1039,15 @@ async function runAnalysis() {
       return;
     }
   } else {
-    // Guest - localStorage limit (3/den)
+    // Guest - 1 analýza zdarma (omezeno na zařízení přes localStorage)
     const today = new Date().toISOString().split('T')[0];
     const guestData = JSON.parse(localStorage.getItem('betiq_guest') || '{}');
     if (guestData.date !== today) { guestData.date = today; guestData.count = 0; }
-    if (guestData.count >= 3) { openAuth(); return; }
+    if (guestData.count >= 1) {
+      // Ukáž výzvu k přihlášení/placení
+      openGuestUpsell();
+      return;
+    }
     guestData.count++;
     localStorage.setItem('betiq_guest', JSON.stringify(guestData));
   }
