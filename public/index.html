@@ -409,14 +409,20 @@ async function logout() {
 async function loadUserProfile() {
   if (!supabaseClient) return;
   const { data: { session } } = await supabaseClient.auth.getSession();
-  if (!session) return;
+  if (!session) { currentUser = null; userProfile = null; authToken = null; return; }
   currentUser = session.user;
   authToken = session.access_token;
+  // Zkus načíst profil z backendu, ale při chybě použij výchozí free profil
   try {
     const resp = await fetch('/api/auth/profile', { headers: { Authorization: `Bearer ${authToken}` } });
-    if (resp.ok) userProfile = await resp.json();
+    if (resp.ok) {
+      userProfile = await resp.json();
+    } else {
+      // Fallback — free plán bez databáze
+      userProfile = { plan: 'free', remaining: 8, limit: 8, analyses_today: 0 };
+    }
   } catch(e) {
-    console.warn('Profile load failed:', e);
+    userProfile = { plan: 'free', remaining: 8, limit: 8, analyses_today: 0 };
   }
 }
 
