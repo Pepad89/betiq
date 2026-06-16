@@ -74,8 +74,12 @@ main{flex:1;max-width:680px;width:100%;margin:0 auto;padding:16px 12px 80px;}
 .match-status.upcoming{color:var(--warn);}
 .match-status.finished{color:var(--muted);}
 
-.analyze-chip{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:var(--accent-dim);border:1px solid var(--accent);color:var(--accent);font-size:11px;font-weight:700;padding:5px 10px;border-radius:20px;opacity:0;transition:opacity .2s;white-space:nowrap;}
-.match-card:hover .analyze-chip{opacity:1;}
+.analyze-chip{background:var(--accent-dim);border:1px solid var(--accent);color:var(--accent);font-size:11px;font-weight:700;padding:5px 10px;border-radius:20px;white-space:nowrap;cursor:pointer;transition:all .18s;display:inline-block;}
+.analyze-chip:hover{background:var(--accent);color:#0a0d12;}
+.match-footer{display:flex;align-items:center;justify-content:flex-end;margin-top:6px;}
+
+.date-group-header{font-size:12px;font-family:var(--mono);letter-spacing:.08em;color:var(--accent);text-transform:uppercase;padding:14px 4px 8px;display:flex;align-items:center;gap:8px;font-weight:700;}
+.date-group-header::after{content:'';flex:1;height:1px;background:var(--border);}
 
 .empty-state{text-align:center;padding:60px 20px;color:var(--muted);}
 .empty-state .icon{font-size:40px;margin-bottom:12px;}
@@ -152,6 +156,7 @@ main{flex:1;max-width:680px;width:100%;margin:0 auto;padding:16px 12px 80px;}
   <div class="tab" id="tab-upcoming" onclick="switchTab('upcoming')">
     📅 Dnešní program
   </div>
+  <div class="tab" id="tab-future" onclick="switchTab('future')">📅 Budoucí</div>
 </div>
 
 <main>
@@ -174,6 +179,10 @@ main{flex:1;max-width:680px;width:100%;margin:0 auto;padding:16px 12px 80px;}
     <div class="modal-handle"></div>
 
     <div class="modal-match">
+      <div id="modalScoreSection" style="margin-bottom:8px;display:none;">
+        <div style="font-family:var(--mono);font-size:36px;font-weight:700;color:var(--live);letter-spacing:.05em;" id="modalScoreBig">0:0</div>
+        <div style="font-size:13px;color:var(--live);font-weight:600;margin-top:2px;" id="modalMinute"></div>
+      </div>
       <div class="modal-teams" id="modalTeams">—</div>
       <div class="modal-meta" id="modalMeta">—</div>
     </div>
@@ -191,8 +200,8 @@ main{flex:1;max-width:680px;width:100%;margin:0 auto;padding:16px 12px 80px;}
       <input type="text" class="modal-input" id="betCustom" placeholder="nebo napiš vlastní typ sázky..." style="margin-top:8px;display:none;">
     </div>
 
-    <button class="modal-btn" id="analyzeBtn" onclick="runAnalysis()">
-      🔍 Analyzovat zápas
+    <button class="modal-btn" id="analyzeBtn" onclick="runAnalysis()" style="font-size:16px;padding:15px;">
+      ⚡ Udělat analýzu
     </button>
 
     <div id="analysisResult"></div>
@@ -215,6 +224,7 @@ function switchTab(tab) {
   currentTab = tab;
   document.getElementById('tab-live').classList.toggle('active', tab==='live');
   document.getElementById('tab-upcoming').classList.toggle('active', tab==='upcoming');
+  document.getElementById('tab-future').classList.toggle('active', tab==='future');
   loadMatches();
 }
 
@@ -239,18 +249,39 @@ async function loadMatches() {
   }
 }
 
+// ── FUTURE MATCHES DATE HELPERS ───────────────────────────────────────────────
+function formatDateHeader(dateStr) {
+  if (!dateStr) return 'Neznámé datum';
+  const date = new Date(dateStr);
+  const today = new Date();
+  const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+  const d2 = new Date(today); d2.setDate(today.getDate() + 2);
+
+  const dayNames = ['Neděle','Pondělí','Úterý','Středa','Čtvrtek','Pátek','Sobota'];
+  const monthNames = ['ledna','února','března','dubna','května','června','července','srpna','září','října','listopadu','prosince'];
+
+  const dateDay = date.toISOString().split('T')[0];
+  const tomorrowDay = tomorrow.toISOString().split('T')[0];
+
+  const dayPart = `${date.getDate()}. ${monthNames[date.getMonth()]}`;
+
+  if (dateDay === tomorrowDay) return `Zítra · ${dayPart}`;
+  const dayName = dayNames[date.getDay()];
+  return `${dayName} · ${dayPart}`;
+}
+
 // ── PARSE API RESPONSE ────────────────────────────────────────────────────────
 function parseMatches(data) {
   // Free API Live Football Data response format
   try {
     const matches = [];
     // Try different response shapes
-    const items = data.response || data.data || data.matches || data.fixtures || data.livescores || [];
-    
+    let items = data.response || data.data || data.matches || data.fixtures || data.livescores || [];
+
     if(!Array.isArray(items) || items.length === 0) {
       // Try nested
       const nested = data.response?.fixtures || data.response?.livescores || [];
-      if(Array.isArray(nested)) items.push(...nested);
+      if(Array.isArray(nested)) items = nested;
     }
 
     (Array.isArray(items) ? items : []).forEach(item => {
@@ -264,8 +295,9 @@ function parseMatches(data) {
       const status = item.status?.short || item.status || item.statusShort || 'NS';
       const minute = item.status?.elapsed || item.elapsed || item.minute || null;
       const time = item.fixture?.date || item.date || item.datetime || '';
+      const fetchDate = item._fetchDate || (time ? time.split('T')[0] : '');
 
-      matches.push({ home, away, homeScore, awayScore, league, country, status, minute, time, raw: item });
+      matches.push({ home, away, homeScore, awayScore, league, country, status, minute, time, fetchDate, raw: item });
     });
 
     return matches;
@@ -290,7 +322,9 @@ function renderMatches() {
   let matches = allMatches;
 
   if(matches.length === 0) {
-    list.innerHTML = `<div class="empty-state"><div class="icon">${currentTab==='live'?'📡':'📅'}</div><p>${currentTab==='live'?'Žádné živé zápasy právě teď.':'Žádné zápasy dnes.'}</p></div>`;
+    const icons = {live:'📡', upcoming:'📅', future:'📅'};
+    const msgs = {live:'Žádné živé zápasy právě teď.', upcoming:'Žádné zápasy dnes.', future:'Žádné budoucí zápasy k zobrazení.'};
+    list.innerHTML = `<div class="empty-state"><div class="icon">${icons[currentTab]||'📅'}</div><p>${msgs[currentTab]||'Žádné zápasy.'}</p></div>`;
     return;
   }
 
@@ -312,6 +346,21 @@ function renderMatches() {
     if(!live.length && !finished.length) {
       html = `<div class="empty-state"><div class="icon">📡</div><p>Žádné živé zápasy právě teď.<br><small style="color:var(--muted)">Zkus přepnout na Dnešní program</small></p></div>`;
     }
+  } else if(currentTab === 'future') {
+    // Seskup podle data
+    const byDate = {};
+    matches.forEach((m, i) => {
+      const key = m.fetchDate || (m.time ? m.time.split('T')[0] : 'unknown');
+      if (!byDate[key]) byDate[key] = [];
+      byDate[key].push({ m, i });
+    });
+    const sortedDates = Object.keys(byDate).sort();
+    sortedDates.forEach(dateKey => {
+      html += `<div class="date-group-header">${formatDateHeader(dateKey)}</div>`;
+      byDate[dateKey].forEach(({ m, i }) => {
+        html += matchCard(m, i, isLive(m.status));
+      });
+    });
   } else {
     if(upcoming.length) {
       html += `<div class="section-label">Nadcházející</div>`;
@@ -347,15 +396,30 @@ function matchCard(m, idx, live) {
       <div class="score-box">${scoreDisplay}${statusText}</div>
       <div class="team away"><div class="team-name">${m.away}</div></div>
     </div>
-    <div class="analyze-chip">🔍 Analyzovat</div>
+    <div class="match-footer">
+      <div class="analyze-chip" onclick="event.stopPropagation();openModal(${idx},true)">⚡ Analyzovat</div>
+    </div>
   </div>`;
 }
 
 // ── MODAL ─────────────────────────────────────────────────────────────────────
-function openModal(idx) {
+function openModal(idx, autoAnalyze = false) {
   selectedMatch = allMatches[idx];
+  const liveMatch = isLive(selectedMatch.status);
+
   document.getElementById('modalTeams').textContent = `${selectedMatch.home} vs ${selectedMatch.away}`;
-  document.getElementById('modalMeta').textContent = `${selectedMatch.league} · ${isLive(selectedMatch.status) ? '🔴 ŽIVĚ ' + (selectedMatch.minute ? selectedMatch.minute+"'" : '') : formatTime(selectedMatch.time) || 'Dnes'}`;
+  document.getElementById('modalMeta').textContent = `${selectedMatch.league} · ${liveMatch ? '🔴 ŽIVĚ ' + (selectedMatch.minute ? selectedMatch.minute+"'" : '') : formatTime(selectedMatch.time) || 'Dnes'}`;
+
+  // Sekce se skóre pro živé zápasy
+  const scoreSection = document.getElementById('modalScoreSection');
+  if (liveMatch && selectedMatch.homeScore !== '–') {
+    document.getElementById('modalScoreBig').textContent = `${selectedMatch.homeScore}:${selectedMatch.awayScore}`;
+    document.getElementById('modalMinute').textContent = selectedMatch.minute ? `${selectedMatch.minute}' · ŽIVĚ` : 'ŽIVĚ';
+    scoreSection.style.display = 'block';
+  } else {
+    scoreSection.style.display = 'none';
+  }
+
   document.getElementById('analysisResult').innerHTML = '';
   document.getElementById('analyzeBtn').disabled = false;
   // Reset chips
@@ -365,6 +429,10 @@ function openModal(idx) {
   document.getElementById('betCustom').style.display = 'none';
   document.getElementById('modalOverlay').classList.add('open');
   document.body.style.overflow = 'hidden';
+
+  if (autoAnalyze) {
+    setTimeout(() => runAnalysis(), 150);
+  }
 }
 
 function closeModal() {
@@ -477,6 +545,7 @@ function renderAnalysis(r) {
 // ── INIT ──────────────────────────────────────────────────────────────────────
 loadMatches();
 setInterval(()=>{ if(currentTab==='live') loadMatches(); }, 60000);
+setInterval(()=>{ if(currentTab==='future') loadMatches(); }, 300000);
 </script>
 </body>
 </html>
