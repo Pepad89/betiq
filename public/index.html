@@ -614,7 +614,21 @@ function parseMatches(data) {
     items.forEach(item => {
       let home, away, homeScore, awayScore, league, country, statusKey, minute, time, fetchDate;
 
-      if (item.homeTeam) {
+      if (item.strHomeTeam) {
+        // TheSportsDB formát
+        home = item.strHomeTeam;
+        away = item.strAwayTeam;
+        homeScore = item.intHomeScore ?? '–';
+        awayScore = item.intAwayScore ?? '–';
+        league = item.strLeague || item.strSport || 'Sport';
+        country = item.strCountry || '';
+        const status = item.strStatus || '';
+        statusKey = status === 'Live' ? 'LIVE' : (status === 'Match Finished' || item.intHomeScore !== null) ? 'FT' : 'NS';
+        minute = item.strProgress || null;
+        time = item.strTimestamp || item.dateEvent || '';
+        fetchDate = item._fetchDate || item.dateEvent || '';
+      } else if (item.homeTeam) {
+        // Sofascore formát
         home = item.homeTeam.name;
         away = item.awayTeam.name;
         homeScore = item.homeScore?.current ?? '–';
@@ -627,6 +641,7 @@ function parseMatches(data) {
         time = item.startTimestamp ? new Date(item.startTimestamp * 1000).toISOString() : '';
         fetchDate = item._fetchDate || (time ? time.split('T')[0] : '');
       } else {
+        // Starý football API formát
         home = item.home?.name || 'Domácí';
         away = item.away?.name || 'Hosté';
         homeScore = item.home?.score ?? '–';
