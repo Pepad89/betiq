@@ -1066,14 +1066,14 @@ async function doAnalysis() {
   const isLiveMatch = isLive(selectedMatch.status);
   const lang = currentLang === 'cs' ? 'Czech' : 'English';
 
-  const systemPrompt = `Jsi expertní sázkový analytik s přístupem na web. POVINNĚ prohledej tyto zdroje: Respond in ${lang}.
-1. Aktuální forma obou týmů (posledních 5 zápasů)
-2. Vzájemné zápasy (head-to-head)
-3. Zranění a absence hráčů
-4. Kurzové trhy (jaké kurzy nabízí bookmakerské kanceláře)
-5. Statistiky ligy a domácí/venkovní výkon
+  const systemPrompt = `You are an expert sports betting analyst. Respond in ${lang}. Use web_search to research:
+1. Recent form (last 5 matches)
+2. Head-to-head record
+3. Injuries and suspensions
+4. Bookmaker odds
+5. League stats and home/away performance
 
-Vrať POUZE validní JSON (bez markdown bloku):
+CRITICAL: Your response must be ONLY a raw JSON object. No text before or after it. No markdown. No explanations. Start your response with { and end with }. Example structure:
 {
   "tips": [
     {"label":"1X2: Domácí vyhraje","prob":65,"odds":"1.55","value":true,"icon":"🏆","reason":"1 věta proč"},
@@ -1089,7 +1089,7 @@ Vrať POUZE validní JSON (bez markdown bloku):
   "risks": "Hlavní riziko v 1 větě",
   "sources": ["zdroj1","zdroj2","zdroj3"]
 }
-Datum: ${today}. Buď konkrétní, ne obecný.`;
+Date: ${today}. Be specific, not generic. Output ONLY the JSON object, nothing else.`;
 
   const userMsg = `Analyzuj zápas: ${selectedMatch.home} vs ${selectedMatch.away}
 Liga: ${selectedMatch.league} ${selectedMatch.country ? '('+selectedMatch.country+')' : ''}
@@ -1115,24 +1115,32 @@ Prohledej web a poskytni detailní analýzu s konkrétními tipy a pravděpodobn
     if(data.error) throw new Error(data.error.message);
 
     const fullText = data.content.map(b=>b.type==='text'?b.text:'').filter(Boolean).join('\n');
-    let clean = fullText.replace(/```json\n?|```/g,'').trim();
-    const obj = clean.match(/\{[\s\S]*\}/);
-    if(!obj) throw new Error('Neplatná odpověď AI');
-    clean = obj[0]
-      .replace(/,(\s*[}\]])/g,'$1')           // trailing commas
-      .replace(/[\x00-\x1F\x7F]/g,' ')         // control chars
-      .replace(/"([^"]*)":\s*"([^"]*)"/g, (m,k,v) => `"${k}":"${v.replace(/"/g,"'")}"`); // nested quotes
+    // Najdi POSLEDNÍ výskyt JSON objektu (AI někdy píše text před ním)
     let r;
+    const allMatches = [...fullText.matchAll(/\{[\s\S]*?\}(?=\s*$|\s*```)/g)];
+    const jsonMatches = fullText.match(/\{[\s\S]*\}/);
+    let clean = jsonMatches ? jsonMatches[0] : null;
+    // Pokud JSON obsahuje "tips" klíč, je to správný objekt
+    if (clean && !clean.includes('"tips"')) {
+      // Zkus najít větší blok
+      const bigMatch = fullText.match(/\{[\s\S]*"tips"[\s\S]*\}/);
+      if (bigMatch) clean = bigMatch[0];
+    }
+    if (!clean) throw new Error('Neplatná odpověď AI');
+    clean = clean
+      .replace(/```json\n?|```/g,'')
+      .replace(/,(\s*[}\]])/g,'$1')
+      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g,' ');
     try {
       r = JSON.parse(clean);
     } catch(parseErr) {
-      // Fallback: zkus extrahovat alespoň bestBet a vytvoř minimální objekt
+      // Fallback
       const bestBetMatch = fullText.match(/"bestBet"\s*:\s*"([^"]+)"/);
       const analysisMatch = fullText.match(/"analysis"\s*:\s*"([^"]+)"/);
       r = {
         bestBet: bestBetMatch?.[1] || 'Analýza dokončena',
         tips: [],
-        analysis: analysisMatch?.[1] || fullText.slice(0, 500),
+        analysis: analysisMatch?.[1] || '',
         risks: '',
         sources: []
       };
