@@ -2,22 +2,23 @@ export default async function handler(req, res) {
   const apiKey = process.env.RAPIDAPI_KEY;
   if (!apiKey) return res.status(500).json({ error: 'RAPIDAPI_KEY není nastaven' });
 
-  const { type } = req.query; // 'live', 'upcoming', nebo 'future'
+  const HOST = 'api-football-v1.p.rapidapi.com';
+  const BASE = `https://${HOST}/v3`;
+
+  const headers = {
+    'x-rapidapi-key': apiKey,
+    'x-rapidapi-host': HOST,
+  };
+
+  const { type } = req.query;
 
   try {
     if (type === 'live') {
-      const url = 'https://free-api-live-football-data.p.rapidapi.com/football-current-live';
-      const response = await fetch(url, {
-        headers: {
-          'x-rapidapi-key': apiKey,
-          'x-rapidapi-host': 'free-api-live-football-data.p.rapidapi.com',
-        }
-      });
+      const response = await fetch(`${BASE}/fixtures?live=all`, { headers });
       const data = await response.json();
       return res.status(200).json(data);
 
     } else if (type === 'future') {
-      // Načti zápasy pro příštích 7 dní (zítra až +7 dní)
       const allFixtures = [];
       const today = new Date();
 
@@ -25,25 +26,14 @@ export default async function handler(req, res) {
         const date = new Date(today);
         date.setDate(today.getDate() + i);
         const dateStr = date.toISOString().split('T')[0];
-
         try {
-          const url = `https://free-api-live-football-data.p.rapidapi.com/football-get-all-fixtures-by-date?date=${dateStr}`;
-          const response = await fetch(url, {
-            headers: {
-              'x-rapidapi-key': apiKey,
-              'x-rapidapi-host': 'free-api-live-football-data.p.rapidapi.com',
-            }
-          });
+          const response = await fetch(`${BASE}/fixtures?date=${dateStr}`, { headers });
           const data = await response.json();
-          // Přidej datum ke každému záznamu pro seskupování
-          const items = data.response || data.data || data.matches || data.fixtures || data.livescores || [];
-          if (Array.isArray(items)) {
-            items.forEach(item => { item._fetchDate = dateStr; });
-            allFixtures.push(...items);
-          }
-        } catch (dayErr) {
-          // Pokud jeden den selže, pokračuj dál
-          console.error(`Error fetching ${dateStr}:`, dayErr.message);
+          const items = data.response || [];
+          items.forEach(item => { item._fetchDate = dateStr; });
+          allFixtures.push(...items);
+        } catch (e) {
+          console.error(`Error fetching ${dateStr}:`, e.message);
         }
       }
 
@@ -52,13 +42,7 @@ export default async function handler(req, res) {
     } else {
       // upcoming — dnešní zápasy
       const today = new Date().toISOString().split('T')[0];
-      const url = `https://free-api-live-football-data.p.rapidapi.com/football-get-all-fixtures-by-date?date=${today}`;
-      const response = await fetch(url, {
-        headers: {
-          'x-rapidapi-key': apiKey,
-          'x-rapidapi-host': 'free-api-live-football-data.p.rapidapi.com',
-        }
-      });
+      const response = await fetch(`${BASE}/fixtures?date=${today}`, { headers });
       const data = await response.json();
       return res.status(200).json(data);
     }
