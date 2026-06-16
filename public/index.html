@@ -938,7 +938,20 @@ function renderAnalysis(r) {
 document.addEventListener('DOMContentLoaded', async () => {
   initSupabase(SUPABASE_PUBLISHABLE_KEY);
 
-  // Zkontroluj přihlášení
+  // Naslouchej změnám auth stavu (včetně Google OAuth redirectu)
+  supabaseClient.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+      await loadUserProfile();
+      updateHeader();
+    } else if (event === 'SIGNED_OUT') {
+      currentUser = null;
+      userProfile = null;
+      authToken = null;
+      updateHeader();
+    }
+  });
+
+  // Zkontroluj přihlášení při načtení
   await loadUserProfile();
   updateHeader();
 
@@ -948,7 +961,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     setTimeout(async () => {
       await loadUserProfile();
       updateHeader();
-      alert('Platba proběhla! Váš plán byl aktivován.');
+      alert('✅ Platba proběhla! Váš plán byl aktivován.');
     }, 2000);
   }
 
