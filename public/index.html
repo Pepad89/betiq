@@ -887,11 +887,28 @@ Prohledej web a poskytni detailní analýzu s konkrétními tipy a pravděpodobn
     if(data.error) throw new Error(data.error.message);
 
     const fullText = data.content.map(b=>b.type==='text'?b.text:'').filter(Boolean).join('\n');
-    let clean = fullText.replace(/```json|```/g,'').trim();
+    let clean = fullText.replace(/```json\n?|```/g,'').trim();
     const obj = clean.match(/\{[\s\S]*\}/);
     if(!obj) throw new Error('Neplatná odpověď AI');
-    clean = obj[0].replace(/,(\s*[}\]])/g,'$1');
-    const r = JSON.parse(clean);
+    clean = obj[0]
+      .replace(/,(\s*[}\]])/g,'$1')           // trailing commas
+      .replace(/[\x00-\x1F\x7F]/g,' ')         // control chars
+      .replace(/"([^"]*)":\s*"([^"]*)"/g, (m,k,v) => `"${k}":"${v.replace(/"/g,"'")}"`); // nested quotes
+    let r;
+    try {
+      r = JSON.parse(clean);
+    } catch(parseErr) {
+      // Fallback: zkus extrahovat alespoň bestBet a vytvoř minimální objekt
+      const bestBetMatch = fullText.match(/"bestBet"\s*:\s*"([^"]+)"/);
+      const analysisMatch = fullText.match(/"analysis"\s*:\s*"([^"]+)"/);
+      r = {
+        bestBet: bestBetMatch?.[1] || 'Analýza dokončena',
+        tips: [],
+        analysis: analysisMatch?.[1] || fullText.slice(0, 500),
+        risks: '',
+        sources: []
+      };
+    }
     renderAnalysis(r);
 
     // Increment counter po úspěšné analýze
