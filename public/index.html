@@ -200,6 +200,18 @@ main{flex:1;max-width:680px;width:100%;margin:0 auto;padding:16px 12px 80px;}
 .ad-overlay.open{display:flex;}
 .ad-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;text-align:center;width:90%;max-width:360px;}
 .ad-countdown{font-size:32px;font-weight:700;color:var(--accent);font-family:var(--mono);}
+
+/* SEARCH */
+.search-bar{padding:10px 12px 0;max-width:680px;width:100%;margin:0 auto;position:relative;}
+.search-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-family:var(--sans);font-size:14px;outline:none;transition:border-color .2s;}
+.search-input:focus{border-color:var(--accent);}
+.search-input::placeholder{color:var(--muted);}
+.search-results{position:absolute;top:100%;left:12px;right:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;z-index:60;max-height:300px;overflow-y:auto;margin-top:4px;}
+.search-result-item{padding:12px 14px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.search-result-item:last-child{border-bottom:none;}
+.search-result-item:hover{background:var(--surface2);}
+.search-result-name{font-size:14px;font-weight:600;}
+.search-result-meta{font-size:11px;color:var(--muted);}
 </style>
 </head>
 <body>
@@ -217,12 +229,17 @@ main{flex:1;max-width:680px;width:100%;margin:0 auto;padding:16px 12px 80px;}
 
 <div class="tabs">
   <div class="tab active" id="tab-live" onclick="switchTab('live')">
-    <span class="live-dot"></span>Živé zápasy
+    📺 Dnes
   </div>
   <div class="tab" id="tab-upcoming" onclick="switchTab('upcoming')">
     📅 Dnešní program
   </div>
   <div class="tab" id="tab-future" onclick="switchTab('future')">📅 Budoucí</div>
+</div>
+
+<div class="search-bar" id="searchBar">
+  <input type="text" id="searchInput" class="search-input" placeholder="🔍 Hledat tým nebo hráče..." oninput="handleSearch(this.value)">
+  <div id="searchResults" class="search-results" style="display:none;"></div>
 </div>
 
 <main>
@@ -337,11 +354,30 @@ main{flex:1;max-width:680px;width:100%;margin:0 auto;padding:16px 12px 80px;}
   </div>
 </div>
 
+<!-- T&C MODAL -->
+<div class="auth-overlay" id="termsOverlay">
+  <div class="auth-box" style="max-height:80vh;overflow-y:auto;">
+    <div class="auth-title" style="font-size:18px;margin-bottom:12px;">📋 Podmínky použití</div>
+    <div style="font-size:12px;color:var(--muted);line-height:1.8;">
+      <p><b style="color:var(--text);">1. Vzdělávací účely</b><br>BetIQ poskytuje analýzy výhradně pro vzdělávací a informační účely. Nejde o finanční poradenství.</p><br>
+      <p><b style="color:var(--text);">2. Hazardní hry</b><br>Sázení je hazardní hra. Nikdy nesázej více, než si můžeš dovolit prohrát. Pokud máš problém s gamblingem, vyhledej odbornou pomoc.</p><br>
+      <p><b style="color:var(--text);">3. Přesnost dat</b><br>Nepřebíráme odpovědnost za přesnost analýz nebo výsledky sázek. Používáte aplikaci na vlastní riziko.</p><br>
+      <p><b style="color:var(--text);">4. Věk</b><br>Aplikaci smí používat pouze osoby starší 18 let.</p><br>
+      <p><b style="color:var(--text);">5. Platby</b><br>Předplatné se automaticky obnovuje. Zrušení je možné kdykoliv před obnovou.</p>
+    </div>
+    <div style="margin-top:16px;display:flex;align-items:center;gap:10px;padding:12px;background:var(--surface2);border-radius:10px;">
+      <input type="checkbox" id="termsCheck" style="width:18px;height:18px;cursor:pointer;">
+      <label for="termsCheck" style="font-size:13px;cursor:pointer;">Souhlasím s podmínkami a potvrzuji, že mi je 18+</label>
+    </div>
+    <button class="auth-btn" style="margin-top:12px;" onclick="acceptTerms()">Potvrdit a pokračovat</button>
+  </div>
+</div>
+
 <script>
 // ── i18n ──────────────────────────────────────────────────────────────────────
 const TRANSLATIONS = {
   cs: {
-    liveTab: '🔴 Živé',
+    liveTab: '📺 Dnes',
     todayTab: '📅 Dnes',
     futureTab: '📅 Budoucí',
     refresh: '↺ Obnovit',
@@ -385,9 +421,12 @@ const TRANSLATIONS = {
     paymentSuccess: '✅ Platba proběhla! Váš plán byl aktivován.',
     limitReached: 'Denní limit analýz vyčerpán.',
     errorPrefix: 'Chyba: ',
+    search: 'Hledat tým nebo hráče...',
+    searching: 'Hledám...',
+    noResults: 'Žádné výsledky.',
   },
   en: {
-    liveTab: '🔴 Live',
+    liveTab: '📺 Today',
     todayTab: '📅 Today',
     futureTab: '📅 Future',
     refresh: '↺ Refresh',
@@ -431,6 +470,9 @@ const TRANSLATIONS = {
     paymentSuccess: '✅ Payment successful! Your plan has been activated.',
     limitReached: 'Daily analysis limit reached.',
     errorPrefix: 'Error: ',
+    search: 'Search team or player...',
+    searching: 'Searching...',
+    noResults: 'No results found.',
   }
 };
 
@@ -448,7 +490,7 @@ function setLang(lang) {
 
 function applyTranslations() {
   // Tapy
-  document.getElementById('tab-live').innerHTML = `<span class="live-dot"></span>${t('liveTab')}`;
+  document.getElementById('tab-live').textContent = t('liveTab');
   document.getElementById('tab-upcoming').textContent = t('todayTab');
   document.getElementById('tab-future').textContent = t('futureTab');
 
@@ -484,6 +526,10 @@ function applyTranslations() {
   // Pricing modal
   const pricingTitle = document.querySelector('.pricing-box > div:first-child > div:first-child');
   if (pricingTitle) pricingTitle.textContent = t('upgradeTitle');
+
+  // Search placeholder
+  const searchInput = document.getElementById('searchInput');
+  if (searchInput) searchInput.placeholder = '🔍 ' + t('search');
 
   // Aktualizuj header
   updateHeader();
@@ -613,16 +659,24 @@ function closePricingOutside(e) { if(e.target===document.getElementById('pricing
 
 async function checkout(plan) {
   if (!currentUser) { closePricing(); openAuth(); return; }
+  const btn = event.currentTarget;
+  const origText = btn.innerHTML;
+  btn.innerHTML = '⏳ Přesměrovávám...';
+  btn.style.opacity = '0.7';
   try {
     const resp = await fetch('/api/stripe/checkout', {
       method: 'POST',
       headers: { 'Content-Type':'application/json', Authorization:`Bearer ${authToken}` },
       body: JSON.stringify({ plan })
     });
-    const { url, error } = await resp.json();
-    if (error) throw new Error(error);
-    if (url) window.location.href = url;
-  } catch(err) { alert('Chyba platby: ' + err.message); }
+    const data = await resp.json();
+    if (data.url) window.location.href = data.url;
+    else throw new Error(data.error || 'Chyba platby');
+  } catch(err) {
+    btn.innerHTML = origText;
+    btn.style.opacity = '1';
+    alert('Chyba: ' + err.message);
+  }
 }
 
 // ── AD SYSTEM ─────────────────────────────────────────────────────────────────
@@ -1135,8 +1189,87 @@ function renderAnalysis(r) {
   document.getElementById('modal').scrollTo({top:999,behavior:'smooth'});
 }
 
+// ── T&C ───────────────────────────────────────────────────────────────────────
+function openTerms() { document.getElementById('termsOverlay').classList.add('open'); }
+function acceptTerms() {
+  if (!document.getElementById('termsCheck').checked) {
+    alert('Musíš souhlasit s podmínkami.');
+    return;
+  }
+  localStorage.setItem('betiq_terms', '1');
+  document.getElementById('termsOverlay').classList.remove('open');
+}
+
+// ── SEARCH ────────────────────────────────────────────────────────────────────
+let searchTimeout = null;
+
+async function handleSearch(query) {
+  clearTimeout(searchTimeout);
+  const resultsEl = document.getElementById('searchResults');
+
+  if (query.length < 2) {
+    resultsEl.style.display = 'none';
+    return;
+  }
+
+  searchTimeout = setTimeout(async () => {
+    resultsEl.style.display = 'block';
+    resultsEl.innerHTML = `<div style="padding:12px;color:var(--muted);font-size:13px;">${t('searching')}</div>`;
+
+    try {
+      const resp = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+      const data = await resp.json();
+
+      if (!data.results || data.results.length === 0) {
+        resultsEl.innerHTML = `<div style="padding:12px;color:var(--muted);font-size:13px;">${t('noResults')}</div>`;
+        return;
+      }
+
+      resultsEl.innerHTML = data.results.map(item => `
+        <div class="search-result-item" onclick="searchTeamMatches('${item.id}', '${item.name.replace(/'/g,"\\'")}', '${item.sport}')">
+          <div style="font-size:24px;">${item.sport === 'Soccer' ? '⚽' : item.sport === 'Basketball' ? '🏀' : '🏅'}</div>
+          <div>
+            <div class="search-result-name">${item.name}</div>
+            <div class="search-result-meta">${item.sport} · ${item.country || ''}</div>
+          </div>
+        </div>
+      `).join('');
+    } catch(e) {
+      resultsEl.innerHTML = '<div style="padding:12px;color:var(--muted);">Chyba vyhledávání.</div>';
+    }
+  }, 400);
+}
+
+async function searchTeamMatches(teamId, teamName, sport) {
+  document.getElementById('searchResults').style.display = 'none';
+  document.getElementById('searchInput').value = teamName;
+
+  document.getElementById('matchList').innerHTML = `<div class="loading"><div class="spinner"></div><p>Hledám zápasy týmu ${teamName}...</p></div>`;
+
+  try {
+    const resp = await fetch(`/api/search?teamId=${teamId}`);
+    const data = await resp.json();
+    allMatches = parseMatches({ events: data.events || [] });
+    renderMatches();
+  } catch(e) {
+    document.getElementById('matchList').innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><p>Nepodařilo se načíst zápasy.</p></div>`;
+  }
+}
+
+// Zavři výsledky při kliknutí mimo
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.search-bar')) {
+    const resultsEl = document.getElementById('searchResults');
+    if (resultsEl) resultsEl.style.display = 'none';
+  }
+});
+
 // ── INIT ──────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
+  if (!localStorage.getItem('betiq_terms')) {
+    setTimeout(() => openTerms(), 1000);
+  }
+
   // Naslouchej změnám auth stavu (včetně Google OAuth redirectu)
   supabaseClient.auth.onAuthStateChange(async (event, session) => {
     if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {

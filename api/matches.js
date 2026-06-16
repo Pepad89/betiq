@@ -22,11 +22,26 @@ export default async function handler(req, res) {
 
   try {
     if (type === 'live') {
-      // TheSportsDB nemá live endpoint na free tieru — vrátíme dnešní zápasy
+      // TheSportsDB free tier — vrátíme dnešní zápasy (live endpoint není k dispozici zdarma)
       const today = formatDate(new Date());
       const r = await fetch(`${BASE}/eventsday.php?d=${today}&s=${sportName}`);
       const data = await r.json();
-      return res.status(200).json({ events: data.events || [] });
+      const events = (data.events || []);
+      // Seřaď: probíhající → nadcházející → ukončené
+      const now = Date.now();
+      const score = (ev) => {
+        const status = ev.strStatus || '';
+        if (status === 'Live') return 0;
+        const t = ev.strTimestamp || ev.dateEvent || '';
+        if (t) {
+          const diff = (new Date(t).getTime() - now) / 60000; // minuty
+          if (diff >= -120 && diff <= 120) return 0; // probíhající okno
+        }
+        const finished = status === 'Match Finished' || ev.intHomeScore !== null;
+        return finished ? 2 : 1;
+      };
+      events.sort((a, b) => score(a) - score(b));
+      return res.status(200).json({ events });
 
     } else if (type === 'future') {
       const all = [];
