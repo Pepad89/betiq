@@ -272,32 +272,40 @@ function formatDateHeader(dateStr) {
 
 // ── PARSE API RESPONSE ────────────────────────────────────────────────────────
 function parseMatches(data) {
-  // Free API Live Football Data response format
   try {
     const matches = [];
-    // Try different response shapes
-    let items = data.response || data.data || data.matches || data.fixtures || data.livescores || [];
 
-    if(!Array.isArray(items) || items.length === 0) {
-      // Try nested
-      const nested = data.response?.fixtures || data.response?.livescores || [];
-      if(Array.isArray(nested)) items = nested;
-    }
+    // Tento API vrací: { status:"success", response: { matches: [...] } }
+    // nebo pro live: { status:"success", response: { live: [...] } }
+    let items = [];
+    if (data.response?.matches) items = data.response.matches;
+    else if (data.response?.live) items = data.response.live;
+    else if (Array.isArray(data.response)) items = data.response;
+    else if (Array.isArray(data.data)) items = data.data;
+    else if (Array.isArray(data.matches)) items = data.matches;
 
-    (Array.isArray(items) ? items : []).forEach(item => {
-      // Normalize different field names
-      const home = item.home?.name || item.homeTeam?.name || item.home_team?.name || item.teams?.home?.name || 'Domácí';
-      const away = item.away?.name || item.awayTeam?.name || item.away_team?.name || item.teams?.away?.name || 'Hosté';
-      const homeScore = item.home?.score ?? item.score?.home ?? item.goals?.home ?? item.homeScore ?? '–';
-      const awayScore = item.away?.score ?? item.score?.away ?? item.goals?.away ?? item.awayScore ?? '–';
-      const league = item.league?.name || item.competition?.name || item.tournament?.name || item.leagueName || 'Fotbal';
+    items.forEach(item => {
+      const home = item.home?.name || item.teams?.home?.name || 'Domácí';
+      const away = item.away?.name || item.teams?.away?.name || 'Hosté';
+      const homeScore = item.home?.score ?? item.goals?.home ?? '–';
+      const awayScore = item.away?.score ?? item.goals?.away ?? '–';
+      const league = item.league?.name || item.competition?.name || ('Liga #' + (item.leagueId || ''));
       const country = item.league?.country || item.country?.name || '';
-      const status = item.status?.short || item.status || item.statusShort || 'NS';
-      const minute = item.status?.elapsed || item.elapsed || item.minute || null;
-      const time = item.fixture?.date || item.date || item.datetime || '';
-      const fetchDate = item._fetchDate || (time ? time.split('T')[0] : '');
 
-      matches.push({ home, away, homeScore, awayScore, league, country, status, minute, time, fetchDate, raw: item });
+      // Status normalizace pro tento API
+      const s = item.status || {};
+      let statusKey;
+      if (s.finished) statusKey = s.reason?.short || 'FT';
+      else if (s.cancelled) statusKey = 'PP';
+      else if (s.started && !s.finished) statusKey = 'LIVE';
+      else statusKey = 'NS';
+
+      const minute = item.status?.elapsed || null;
+      // Čas: API vrací "16.06.2026 17:00" → převedeme na ISO
+      const rawTime = item.status?.utcTime || item.time || '';
+      const fetchDate = item._fetchDate || (item.status?.utcTime ? item.status.utcTime.split('T')[0] : '');
+
+      matches.push({ home, away, homeScore, awayScore, league, country, status: statusKey, minute, time: rawTime, fetchDate, raw: item });
     });
 
     return matches;
@@ -308,8 +316,8 @@ function parseMatches(data) {
 }
 
 // ── STATUS HELPERS ────────────────────────────────────────────────────────────
-function isLive(s) { return ['1H','2H','HT','ET','P','LIVE','IN_PLAY','inprogress'].includes(s); }
-function isFinished(s) { return ['FT','AET','PEN','FINISHED','finished'].includes(s); }
+function isLive(s) { return ['1H','2H','HT','ET','P','LIVE','IN_PLAY','inprogress','live'].includes(s); }
+function isFinished(s) { return ['FT','AET','PEN','FINISHED','finished','PP'].includes(s); }
 function formatTime(dateStr) {
   if(!dateStr) return '';
   try { return new Date(dateStr).toLocaleTimeString('cs-CZ',{hour:'2-digit',minute:'2-digit'}); }
