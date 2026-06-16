@@ -228,12 +228,7 @@ main{flex:1;max-width:680px;width:100%;margin:0 auto;padding:16px 12px 80px;}
 </header>
 
 <div class="tabs">
-  <div class="tab active" id="tab-live" onclick="switchTab('live')">
-    📺 Dnes
-  </div>
-  <div class="tab" id="tab-upcoming" onclick="switchTab('upcoming')">
-    📅 Dnešní program
-  </div>
+  <div class="tab active" id="tab-live" onclick="switchTab('live')">📺 Dnes</div>
   <div class="tab" id="tab-future" onclick="switchTab('future')">📅 Budoucí</div>
 </div>
 
@@ -491,7 +486,7 @@ function setLang(lang) {
 function applyTranslations() {
   // Tapy
   document.getElementById('tab-live').textContent = t('liveTab');
-  document.getElementById('tab-upcoming').textContent = t('todayTab');
+  document.getElementById('tab-live').textContent = t('liveTab');
   document.getElementById('tab-future').textContent = t('futureTab');
 
   // Header tlačítka
@@ -709,8 +704,9 @@ let currentLeague = 'all';
 
 function switchTab(tab) {
   currentTab = tab;
-  ['live','upcoming','future'].forEach(t => {
-    document.getElementById('tab-'+t).classList.toggle('active', t===tab);
+  ['live','future'].forEach(t => {
+    const el = document.getElementById('tab-'+t);
+    if(el) el.classList.toggle('active', t===tab);
   });
   document.getElementById('datePicker').style.display = tab==='future' ? 'flex' : 'none';
   document.getElementById('leagueFilter').style.display = tab==='future' ? 'flex' : 'none';
@@ -954,14 +950,17 @@ function renderMatches() {
 function matchCard(m, idx, live) {
   const sportIcons = { football:'⚽', basketball:'🏀', tennis:'🎾', 'ice-hockey':'🏒', baseball:'⚾', 'american-football':'🏈' };
   const sportIcon = sportIcons[currentSport] || '🏅';
-  const scoreDisplay = (m.homeScore !== undefined && m.homeScore !== '–')
-    ? `<div class="score ${live?'live-score':''}">${m.homeScore}:${m.awayScore}</div>`
-    : `<div class="score" style="color:var(--muted);font-size:16px;">vs</div>`;
+  // Probíhající zápas = nemáme aktuální skóre → zobraz ?:?
+  const scoreDisplay = live
+    ? `<div class="score live-score" style="font-size:18px;opacity:.7;">?:?</div>`
+    : (m.homeScore !== undefined && m.homeScore !== '–' && m.homeScore !== null)
+      ? `<div class="score">${m.homeScore}:${m.awayScore}</div>`
+      : `<div class="score" style="color:var(--muted);font-size:16px;">vs</div>`;
 
   let statusText = '';
-  if(live) statusText = `<div class="match-status live">${m.minute ? m.minute+"'" : t('live')}</div>`;
+  if(live) statusText = `<div class="match-status live">● ${currentLang==='cs'?'Probíhá':'In Progress'}</div>`;
   else if(isFinished(m.status)) statusText = `<div class="match-status finished">${t('finished')}</div>`;
-  else statusText = `<div class="match-status upcoming">${formatTime(m.time) || 'Dnes'}</div>`;
+  else statusText = `<div class="match-status upcoming">${formatTime(m.time) || (currentLang==='cs'?'Dnes':'Today')}</div>`;
 
   return `<div class="match-card ${live?'live':''}" onclick="openModal(${idx})">
     <div class="match-league"><span class="league-flag">${sportIcon}</span>${m.league}${m.country?' · '+m.country:''}</div>
