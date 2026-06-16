@@ -7,6 +7,10 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="BetIQ">
 <title>BetIQ</title>
+<!-- PWA -->
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0a0d12">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
 :root {
@@ -139,7 +143,7 @@ main{flex:1;max-width:680px;width:100%;margin:0 auto;padding:16px 12px 80px;}
 
 .date-picker{display:flex;gap:6px;overflow-x:auto;padding:0 0 10px;scrollbar-width:none;margin-bottom:2px;}
 .date-picker::-webkit-scrollbar{display:none;}
-.day-btn{display:flex;flex-direction:column;align-items:center;gap:2px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:8px 12px;cursor:pointer;white-space:nowrap;min-width:52px;transition:all .18s;flex-shrink:0;}
+.day-btn{display:flex;flex-direction:column;align-items:center;gap:2px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:8px 12px;cursor:pointer;white-space:nowrap;min-width:52px;transition:all .18px;flex-shrink:0;}
 .day-btn.active{background:var(--accent-dim);border-color:var(--accent);}
 .day-btn .day-name{font-size:10px;color:var(--muted);text-transform:uppercase;font-family:var(--mono);}
 .day-btn.active .day-name{color:var(--accent);}
@@ -151,6 +155,51 @@ main{flex:1;max-width:680px;width:100%;margin:0 auto;padding:16px 12px 80px;}
 .league-filter::-webkit-scrollbar{display:none;}
 .league-btn{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:11px;color:var(--muted);cursor:pointer;white-space:nowrap;transition:all .18s;}
 .league-btn.active{background:var(--accent-dim);border-color:var(--accent);color:var(--accent);font-weight:600;}
+
+/* AUTH MODAL */
+.auth-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);z-index:200;display:none;align-items:center;justify-content:center;}
+.auth-overlay.open{display:flex;}
+.auth-box{background:var(--surface);border:1px solid var(--border);border-radius:20px;width:90%;max-width:400px;padding:28px 24px;}
+.auth-title{font-size:22px;font-weight:700;margin-bottom:6px;text-align:center;}
+.auth-sub{font-size:13px;color:var(--muted);text-align:center;margin-bottom:20px;}
+.auth-input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-family:var(--sans);font-size:14px;outline:none;margin-bottom:10px;}
+.auth-input:focus{border-color:var(--accent);}
+.auth-btn{width:100%;padding:13px;background:var(--accent);color:#0a0d12;font-weight:700;border:none;border-radius:10px;cursor:pointer;font-size:15px;margin-bottom:8px;}
+.auth-btn.secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
+.auth-google{width:100%;padding:12px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:10px;cursor:pointer;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;}
+.auth-switch{font-size:12px;color:var(--muted);text-align:center;cursor:pointer;}
+.auth-switch span{color:var(--accent);}
+
+/* PLAN BADGE */
+.plan-badge{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;font-family:var(--mono);}
+.plan-free{background:rgba(107,122,153,.15);color:var(--muted);}
+.plan-no_ads{background:rgba(0,229,160,.12);color:var(--accent);}
+.plan-basic{background:rgba(245,158,11,.12);color:var(--warn);}
+.plan-premium{background:rgba(168,85,247,.15);color:#a855f7;}
+
+/* USER MENU */
+.user-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:8px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;}
+.limit-bar{height:3px;background:var(--border);border-radius:2px;margin-top:3px;width:60px;}
+.limit-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .3s;}
+
+/* PRICING MODAL */
+.pricing-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);z-index:200;display:none;align-items:flex-end;justify-content:center;padding:0;}
+.pricing-overlay.open{display:flex;}
+@media(min-width:600px){.pricing-overlay{align-items:center;}}
+.pricing-box{background:var(--surface);border:1px solid var(--border);border-radius:20px 20px 0 0;width:100%;max-width:500px;padding:24px;max-height:90vh;overflow-y:auto;}
+@media(min-width:600px){.pricing-box{border-radius:20px;}}
+.plan-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:10px;cursor:pointer;transition:all .2s;}
+.plan-card:hover,.plan-card.recommended{border-color:var(--accent);}
+.plan-card.recommended{background:var(--accent-dim);}
+.plan-name{font-size:15px;font-weight:700;margin-bottom:2px;}
+.plan-price{font-size:22px;font-weight:700;color:var(--accent);font-family:var(--mono);}
+.plan-desc{font-size:12px;color:var(--muted);margin-top:4px;}
+
+/* AD OVERLAY */
+.ad-overlay{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:300;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;}
+.ad-overlay.open{display:flex;}
+.ad-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;text-align:center;width:90%;max-width:360px;}
+.ad-countdown{font-size:32px;font-weight:700;color:var(--accent);font-family:var(--mono);}
 </style>
 </head>
 <body>
@@ -159,8 +208,9 @@ main{flex:1;max-width:680px;width:100%;margin:0 auto;padding:16px 12px 80px;}
   <div class="logo-dot"></div>
   <span class="logo-text">BetIQ</span>
   <span class="logo-sub">/ Live</span>
-  <div class="header-right">
+  <div class="header-right" id="headerRight">
     <button class="refresh-btn" onclick="loadMatches()">↺ Obnovit</button>
+    <button class="user-btn" onclick="openAuth()">👤 Přihlásit</button>
   </div>
 </header>
 
@@ -223,15 +273,219 @@ main{flex:1;max-width:680px;width:100%;margin:0 auto;padding:16px 12px 80px;}
   </div>
 </div>
 
+<!-- AUTH MODAL -->
+<div class="auth-overlay" id="authOverlay">
+  <div class="auth-box">
+    <div class="auth-title">👋 Vítej v BetIQ</div>
+    <div class="auth-sub" id="authSub">Přihlás se pro ukládání analýz a sledování limitu</div>
+    <button class="auth-google" onclick="loginGoogle()">
+      <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957C.347 6.173 0 7.548 0 9s.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg>
+      Přihlásit přes Google
+    </button>
+    <div style="text-align:center;font-size:12px;color:var(--muted);margin-bottom:12px;">— nebo —</div>
+    <input type="email" class="auth-input" id="authEmail" placeholder="Email">
+    <input type="password" class="auth-input" id="authPassword" placeholder="Heslo">
+    <button class="auth-btn" id="authMainBtn" onclick="authAction()">Přihlásit se</button>
+    <div class="auth-switch" onclick="toggleAuthMode()">Nemáš účet? <span>Registrovat se</span></div>
+    <div style="margin-top:12px;text-align:center;">
+      <button class="auth-btn secondary" onclick="closeAuth()" style="font-size:13px;padding:10px;">Pokračovat bez přihlášení</button>
+    </div>
+  </div>
+</div>
+
+<!-- PRICING MODAL -->
+<div class="pricing-overlay" id="pricingOverlay" onclick="closePricingOutside(event)">
+  <div class="pricing-box">
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="font-size:20px;font-weight:700;">⚡ Upgrade plánu</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:4px;">Více analýz, bez reklam</div>
+    </div>
+    <div class="plan-card" onclick="checkout('no_ads')">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div><div class="plan-name">🚫 No Ads</div><div class="plan-desc">10 analýz/den · Bez reklam</div></div>
+        <div class="plan-price">99 Kč</div>
+      </div>
+    </div>
+    <div class="plan-card recommended" onclick="checkout('basic')">
+      <div style="font-size:10px;color:var(--accent);font-weight:700;margin-bottom:6px;">★ NEJOBLÍBENĚJŠÍ</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div><div class="plan-name">📊 Basic</div><div class="plan-desc">24 analýz/den · Bez reklam</div></div>
+        <div class="plan-price">199 Kč</div>
+      </div>
+    </div>
+    <div class="plan-card" onclick="checkout('premium')">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div><div class="plan-name">👑 Premium</div><div class="plan-desc">50 analýz/den · Bez reklam · Prioritní AI</div></div>
+        <div class="plan-price">349 Kč</div>
+      </div>
+    </div>
+    <button onclick="closePricing()" style="width:100%;padding:12px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:10px;cursor:pointer;margin-top:4px;">Zrušit</button>
+  </div>
+</div>
+
+<!-- AD OVERLAY -->
+<div class="ad-overlay" id="adOverlay">
+  <div class="ad-box">
+    <div style="font-size:14px;color:var(--muted);margin-bottom:8px;">Reklama · Free plán</div>
+    <div style="font-size:16px;font-weight:700;margin-bottom:16px;">🎯 Zkus BetIQ Basic<br>za pouhých 199 Kč/měs</div>
+    <div style="font-size:12px;color:var(--muted);">Bez reklam · 24 analýz/den</div>
+  </div>
+  <div style="text-align:center;">
+    <div class="ad-countdown" id="adCountdown">5</div>
+    <div style="font-size:12px;color:var(--muted);">sekund</div>
+  </div>
+</div>
+
 <script>
+// ── SUPABASE INIT ─────────────────────────────────────────────────────────────
+const SUPABASE_URL = 'https://hnfxeskhhuesgpvgvskl.supabase.co';
+// Publishable (anon) key — je bezpečné mít v kódu (je to veřejný klíč)
+// Secret key NIKDY do frontendu!
+const SUPABASE_PUBLISHABLE_KEY = 'SUPABASE_PUBLISHABLE_KEY_PLACEHOLDER';
+
+let supabaseClient = null;
+let currentUser = null;
+let userProfile = null;
+let authToken = null;
+let authMode = 'login';
+
+function initSupabase(publishableKey) {
+  if (!publishableKey || publishableKey === 'SUPABASE_PUBLISHABLE_KEY_PLACEHOLDER') return;
+  supabaseClient = window.supabase.createClient(SUPABASE_URL, publishableKey);
+}
+
+// ── AUTH FUNCTIONS ────────────────────────────────────────────────────────────
+function openAuth() { document.getElementById('authOverlay').classList.add('open'); }
+function closeAuth() { document.getElementById('authOverlay').classList.remove('open'); }
+
+function toggleAuthMode() {
+  authMode = authMode === 'login' ? 'register' : 'login';
+  document.getElementById('authMainBtn').textContent = authMode === 'login' ? 'Přihlásit se' : 'Registrovat se';
+  document.querySelector('.auth-switch').innerHTML = authMode === 'login'
+    ? 'Nemáš účet? <span>Registrovat se</span>'
+    : 'Už máš účet? <span>Přihlásit se</span>';
+}
+
+async function loginGoogle() {
+  if (!supabaseClient) return;
+  await supabaseClient.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.href } });
+}
+
+async function authAction() {
+  if (!supabaseClient) return;
+  const email = document.getElementById('authEmail').value;
+  const password = document.getElementById('authPassword').value;
+  const btn = document.getElementById('authMainBtn');
+  btn.textContent = '...';
+  btn.disabled = true;
+  try {
+    let result;
+    if (authMode === 'login') {
+      result = await supabaseClient.auth.signInWithPassword({ email, password });
+    } else {
+      result = await supabaseClient.auth.signUp({ email, password });
+    }
+    if (result.error) throw result.error;
+    closeAuth();
+    await loadUserProfile();
+    updateHeader();
+  } catch(err) {
+    alert(err.message);
+  } finally {
+    btn.textContent = authMode === 'login' ? 'Přihlásit se' : 'Registrovat se';
+    btn.disabled = false;
+  }
+}
+
+async function logout() {
+  if (!supabaseClient) return;
+  await supabaseClient.auth.signOut();
+  currentUser = null;
+  userProfile = null;
+  authToken = null;
+  updateHeader();
+}
+
+async function loadUserProfile() {
+  if (!supabaseClient) return;
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) return;
+  currentUser = session.user;
+  authToken = session.access_token;
+  try {
+    const resp = await fetch('/api/auth/profile', { headers: { Authorization: `Bearer ${authToken}` } });
+    if (resp.ok) userProfile = await resp.json();
+  } catch(e) {
+    console.warn('Profile load failed:', e);
+  }
+}
+
+function updateHeader() {
+  const right = document.getElementById('headerRight');
+  if (!currentUser || !userProfile) {
+    right.innerHTML = `
+      <button class="refresh-btn" onclick="loadMatches()">↺ Obnovit</button>
+      <button class="user-btn" onclick="openAuth()">👤 Přihlásit</button>`;
+  } else {
+    const planLabels = { free:'FREE', no_ads:'NO ADS', basic:'BASIC', premium:'PREMIUM' };
+    right.innerHTML = `
+      <button class="refresh-btn" onclick="loadMatches()">↺ Obnovit</button>
+      <button class="user-btn" onclick="openPricing()">
+        <span>${currentUser.email?.split('@')[0]}</span>
+        <span class="plan-badge plan-${userProfile.plan}">${planLabels[userProfile.plan]||'FREE'}</span>
+      </button>
+      <div style="font-size:11px;color:var(--muted);text-align:right;line-height:1.3;">${userProfile.remaining}/${userProfile.limit}<br>
+        <div class="limit-bar"><div class="limit-fill" style="width:${Math.round(userProfile.remaining/userProfile.limit*100)}%"></div></div>
+      </div>
+      <button class="refresh-btn" onclick="logout()" style="font-size:11px;">Odhlásit</button>`;
+  }
+}
+
+// ── PRICING ───────────────────────────────────────────────────────────────────
+function openPricing() { document.getElementById('pricingOverlay').classList.add('open'); }
+function closePricing() { document.getElementById('pricingOverlay').classList.remove('open'); }
+function closePricingOutside(e) { if(e.target===document.getElementById('pricingOverlay')) closePricing(); }
+
+async function checkout(plan) {
+  if (!currentUser) { closePricing(); openAuth(); return; }
+  try {
+    const resp = await fetch('/api/stripe/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', Authorization:`Bearer ${authToken}` },
+      body: JSON.stringify({ plan })
+    });
+    const { url, error } = await resp.json();
+    if (error) throw new Error(error);
+    if (url) window.location.href = url;
+  } catch(err) { alert('Chyba platby: ' + err.message); }
+}
+
+// ── AD SYSTEM ─────────────────────────────────────────────────────────────────
+function showAd(callback) {
+  const overlay = document.getElementById('adOverlay');
+  overlay.classList.add('open');
+  let count = 5;
+  document.getElementById('adCountdown').textContent = count;
+  const timer = setInterval(() => {
+    count--;
+    document.getElementById('adCountdown').textContent = count;
+    if (count <= 0) {
+      clearInterval(timer);
+      overlay.classList.remove('open');
+      callback();
+    }
+  }, 1000);
+  overlay.querySelector('.ad-box').onclick = () => { openPricing(); };
+}
+
+// ── TAB SWITCH ──────────────────────────────────────────────────────────────
 let currentTab = 'live';
 let currentSport = 'football';
 let allMatches = [];
 let selectedMatch = null;
-let currentDay = null; // null = vše, jinak 'YYYY-MM-DD'
+let currentDay = null;
 let currentLeague = 'all';
 
-// ── TAB SWITCH ──────────────────────────────────────────────────────────────
 function switchTab(tab) {
   currentTab = tab;
   ['live','upcoming','future'].forEach(t => {
@@ -252,7 +506,6 @@ function initDatePicker() {
   const dayNames = ['Ne','Po','Út','St','Čt','Pá','So'];
   const monthNames = ['led','úno','bře','dub','kvě','čvn','čvc','srp','zář','říj','lis','pro'];
 
-  // "Vše" tlačítko
   const allBtn = document.createElement('div');
   allBtn.className = 'day-btn active';
   allBtn.innerHTML = `<div class="day-name">VŠE</div><div class="day-num">📅</div>`;
@@ -323,7 +576,6 @@ function formatDateHeader(dateStr) {
   const date = new Date(dateStr);
   const today = new Date();
   const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
-  const d2 = new Date(today); d2.setDate(today.getDate() + 2);
 
   const dayNames = ['Neděle','Pondělí','Úterý','Středa','Čtvrtek','Pátek','Sobota'];
   const monthNames = ['ledna','února','března','dubna','května','června','července','srpna','září','října','listopadu','prosince'];
@@ -343,7 +595,6 @@ function parseMatches(data) {
   try {
     const matches = [];
 
-    // Sofascore format
     let items = [];
     if (data.events) items = data.events;
     else if (data.response?.matches) items = data.response.matches;
@@ -354,7 +605,6 @@ function parseMatches(data) {
       let home, away, homeScore, awayScore, league, country, statusKey, minute, time, fetchDate;
 
       if (item.homeTeam) {
-        // Sofascore format
         home = item.homeTeam.name;
         away = item.awayTeam.name;
         homeScore = item.homeScore?.current ?? '–';
@@ -367,7 +617,6 @@ function parseMatches(data) {
         time = item.startTimestamp ? new Date(item.startTimestamp * 1000).toISOString() : '';
         fetchDate = item._fetchDate || (time ? time.split('T')[0] : '');
       } else {
-        // Old API format (football-specific)
         home = item.home?.name || 'Domácí';
         away = item.away?.name || 'Hosté';
         homeScore = item.home?.score ?? '–';
@@ -435,7 +684,6 @@ function renderMatches() {
       html = `<div class="empty-state"><div class="icon">📡</div><p>Žádné živé zápasy právě teď.<br><small style="color:var(--muted)">Zkus přepnout na Dnešní program</small></p></div>`;
     }
   } else if(currentTab === 'future') {
-    // Seskup podle data
     const byDate = {};
     matches.forEach((m, i) => {
       const key = m.fetchDate || (m.time ? m.time.split('T')[0] : 'unknown');
@@ -500,7 +748,6 @@ function openModal(idx, autoAnalyze = false) {
   document.getElementById('modalTeams').textContent = `${selectedMatch.home} vs ${selectedMatch.away}`;
   document.getElementById('modalMeta').textContent = `${selectedMatch.league} · ${liveMatch ? '🔴 ŽIVĚ ' + (selectedMatch.minute ? selectedMatch.minute+"'" : '') : formatTime(selectedMatch.time) || 'Dnes'}`;
 
-  // Sekce se skóre pro živé zápasy
   const scoreSection = document.getElementById('modalScoreSection');
   if (liveMatch && selectedMatch.homeScore !== '–') {
     document.getElementById('modalScoreBig').textContent = `${selectedMatch.homeScore}:${selectedMatch.awayScore}`;
@@ -531,7 +778,34 @@ function closeModalOutside(e) {
 
 // ── ANALYSIS ──────────────────────────────────────────────────────────────────
 async function runAnalysis() {
-  if(!selectedMatch) return;
+  if (!selectedMatch) return;
+
+  // Zkontroluj limit
+  if (currentUser && userProfile) {
+    if (userProfile.remaining <= 0) {
+      openPricing();
+      return;
+    }
+    // Free plán = reklama před analýzou
+    if (userProfile.plan === 'free') {
+      showAd(() => doAnalysis());
+      return;
+    }
+  } else {
+    // Guest - localStorage limit (3/den)
+    const today = new Date().toISOString().split('T')[0];
+    const guestData = JSON.parse(localStorage.getItem('betiq_guest') || '{}');
+    if (guestData.date !== today) { guestData.date = today; guestData.count = 0; }
+    if (guestData.count >= 3) { openAuth(); return; }
+    guestData.count++;
+    localStorage.setItem('betiq_guest', JSON.stringify(guestData));
+  }
+
+  doAnalysis();
+}
+
+async function doAnalysis() {
+  if (!selectedMatch) return;
   const btn = document.getElementById('analyzeBtn');
   btn.disabled = true;
 
@@ -594,6 +868,20 @@ Prohledej web a poskytni detailní analýzu s konkrétními tipy a pravděpodobn
     clean = obj[0].replace(/,(\s*[}\]])/g,'$1');
     const r = JSON.parse(clean);
     renderAnalysis(r);
+
+    // Increment counter po úspěšné analýze
+    if (currentUser && authToken) {
+      try {
+        const resp = await fetch('/api/auth/increment', { method:'POST', headers:{ Authorization:`Bearer ${authToken}` } });
+        const inc = await resp.json();
+        if (userProfile && inc.remaining !== undefined) {
+          userProfile.remaining = inc.remaining;
+          updateHeader();
+        }
+      } catch(e) {
+        console.warn('Increment failed:', e);
+      }
+    }
   } catch(e) {
     document.getElementById('analysisResult').innerHTML = `<div class="error-msg">Chyba: ${e.message}</div>`;
   } finally {
@@ -647,9 +935,27 @@ function renderAnalysis(r) {
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
-loadMatches();
-setInterval(()=>{ if(currentTab==='live') loadMatches(); }, 60000);
-setInterval(()=>{ if(currentTab==='future') loadMatches(); }, 300000);
+document.addEventListener('DOMContentLoaded', async () => {
+  initSupabase(SUPABASE_PUBLISHABLE_KEY);
+
+  // Zkontroluj přihlášení
+  await loadUserProfile();
+  updateHeader();
+
+  // Zkontroluj payment callback
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('payment') === 'success') {
+    setTimeout(async () => {
+      await loadUserProfile();
+      updateHeader();
+      alert('Platba proběhla! Váš plán byl aktivován.');
+    }, 2000);
+  }
+
+  loadMatches();
+  setInterval(()=>{ if(currentTab==='live') loadMatches(); }, 60000);
+  setInterval(()=>{ if(currentTab==='future') loadMatches(); }, 300000);
+});
 </script>
 </body>
 </html>
