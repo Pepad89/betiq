@@ -136,6 +136,21 @@ main{flex:1;max-width:680px;width:100%;margin:0 auto;padding:16px 12px 80px;}
 .disclaimer-sm{background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);border-radius:8px;padding:10px 12px;font-size:11px;color:#a07030;margin-top:12px;line-height:1.6;}
 
 .error-msg{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:8px;padding:12px;color:#fca5a5;font-size:13px;margin-top:10px;}
+
+.date-picker{display:flex;gap:6px;overflow-x:auto;padding:0 0 10px;scrollbar-width:none;margin-bottom:2px;}
+.date-picker::-webkit-scrollbar{display:none;}
+.day-btn{display:flex;flex-direction:column;align-items:center;gap:2px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:8px 12px;cursor:pointer;white-space:nowrap;min-width:52px;transition:all .18s;flex-shrink:0;}
+.day-btn.active{background:var(--accent-dim);border-color:var(--accent);}
+.day-btn .day-name{font-size:10px;color:var(--muted);text-transform:uppercase;font-family:var(--mono);}
+.day-btn.active .day-name{color:var(--accent);}
+.day-btn .day-num{font-size:18px;font-weight:700;color:var(--text);}
+.day-btn.active .day-num{color:var(--accent);}
+.day-btn .day-month{font-size:9px;color:var(--muted);}
+
+.league-filter{display:flex;gap:6px;overflow-x:auto;padding:0 0 10px;scrollbar-width:none;margin-top:2px;}
+.league-filter::-webkit-scrollbar{display:none;}
+.league-btn{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:11px;color:var(--muted);cursor:pointer;white-space:nowrap;transition:all .18s;}
+.league-btn.active{background:var(--accent-dim);border-color:var(--accent);color:var(--accent);font-weight:600;}
 </style>
 </head>
 <body>
@@ -160,6 +175,9 @@ main{flex:1;max-width:680px;width:100%;margin:0 auto;padding:16px 12px 80px;}
 </div>
 
 <main>
+  <div class="date-picker" id="datePicker" style="display:none;"></div>
+  <div class="league-filter" id="leagueFilter" style="display:none;"></div>
+
   <div class="sport-filter" id="sportFilter">
     <button class="sf-btn active" data-sport="football" onclick="filterSport(this)">⚽ Fotbal</button>
     <button class="sf-btn" data-sport="basketball" onclick="filterSport(this)">🏀 Basketbal</button>
@@ -208,14 +226,71 @@ let currentTab = 'live';
 let currentSport = 'football';
 let allMatches = [];
 let selectedMatch = null;
+let currentDay = null; // null = vše, jinak 'YYYY-MM-DD'
+let currentLeague = 'all';
 
 // ── TAB SWITCH ──────────────────────────────────────────────────────────────
 function switchTab(tab) {
   currentTab = tab;
-  document.getElementById('tab-live').classList.toggle('active', tab==='live');
-  document.getElementById('tab-upcoming').classList.toggle('active', tab==='upcoming');
-  document.getElementById('tab-future').classList.toggle('active', tab==='future');
+  ['live','upcoming','future'].forEach(t => {
+    document.getElementById('tab-'+t).classList.toggle('active', t===tab);
+  });
+  document.getElementById('datePicker').style.display = tab==='future' ? 'flex' : 'none';
+  document.getElementById('leagueFilter').style.display = tab==='future' ? 'flex' : 'none';
+  if(tab==='future') initDatePicker();
+  currentDay = null;
+  currentLeague = 'all';
   loadMatches();
+}
+
+// ── DATE PICKER ──────────────────────────────────────────────────────────────
+function initDatePicker() {
+  const picker = document.getElementById('datePicker');
+  picker.innerHTML = '';
+  const dayNames = ['Ne','Po','Út','St','Čt','Pá','So'];
+  const monthNames = ['led','úno','bře','dub','kvě','čvn','čvc','srp','zář','říj','lis','pro'];
+
+  // "Vše" tlačítko
+  const allBtn = document.createElement('div');
+  allBtn.className = 'day-btn active';
+  allBtn.innerHTML = `<div class="day-name">VŠE</div><div class="day-num">📅</div>`;
+  allBtn.onclick = () => selectDay(allBtn, null);
+  picker.appendChild(allBtn);
+
+  const today = new Date();
+  for (let i = 1; i <= 7; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    const dateStr = d.toISOString().split('T')[0];
+    const btn = document.createElement('div');
+    btn.className = 'day-btn';
+    btn.dataset.date = dateStr;
+    btn.innerHTML = `<div class="day-name">${dayNames[d.getDay()]}</div><div class="day-num">${d.getDate()}</div><div class="day-month">${monthNames[d.getMonth()]}</div>`;
+    btn.onclick = () => selectDay(btn, dateStr);
+    picker.appendChild(btn);
+  }
+}
+
+function selectDay(btn, dateStr) {
+  document.querySelectorAll('.day-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  currentDay = dateStr;
+  currentLeague = 'all';
+  renderMatches();
+}
+
+function updateLeagueFilter() {
+  const filter = document.getElementById('leagueFilter');
+  const leagues = [...new Set(allMatches.map(m=>m.league).filter(Boolean))].slice(0, 15);
+  filter.innerHTML = `<button class="league-btn active" onclick="selectLeague(this,'all')">🌍 Vše</button>` +
+    leagues.map(l=>`<button class="league-btn" onclick="selectLeague(this,'${l.replace(/'/g,"\\'")}')">${l}</button>`).join('');
+}
+
+function selectLeague(btn, league) {
+  document.querySelectorAll('.league-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  currentLeague = league;
+  renderMatches();
 }
 
 // ── SPORT FILTER ─────────────────────────────────────────────────────────────
@@ -234,6 +309,7 @@ async function loadMatches() {
     const data = await res.json();
     allMatches = parseMatches(data);
     renderMatches();
+    if(currentTab === 'future') updateLeagueFilter();
   } catch(e) {
     document.getElementById('matchList').innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><p>Nepodařilo se načíst zápasy.<br><small style="color:var(--muted)">${e.message}</small></p></div>`;
   }
@@ -326,6 +402,10 @@ function formatTime(dateStr) {
 function renderMatches() {
   const list = document.getElementById('matchList');
   let matches = allMatches;
+  if(currentTab === 'future') {
+    if(currentDay) matches = matches.filter(m => m.fetchDate === currentDay);
+    if(currentLeague !== 'all') matches = matches.filter(m => m.league === currentLeague);
+  }
 
   if(matches.length === 0) {
     const icons = {live:'📡', upcoming:'📅', future:'📅'};
@@ -458,28 +538,36 @@ async function runAnalysis() {
   const today = new Date().toLocaleDateString('cs-CZ');
   const isLiveMatch = isLive(selectedMatch.status);
 
-  const systemPrompt = `Jsi expertní sázkový analytik. Použij web search pro aktuální informace.
-Vrať POUZE validní JSON (bez markdown):
+  const systemPrompt = `Jsi expertní sázkový analytik s přístupem na web. POVINNĚ prohledej tyto zdroje:
+1. Aktuální forma obou týmů (posledních 5 zápasů)
+2. Vzájemné zápasy (head-to-head)
+3. Zranění a absence hráčů
+4. Kurzové trhy (jaké kurzy nabízí bookmakerské kanceláře)
+5. Statistiky ligy a domácí/venkovní výkon
+
+Vrať POUZE validní JSON (bez markdown bloku):
 {
   "tips": [
-    {"label":"1X2: Domácí vyhraje","prob":65,"odds":"1.55","value":true,"icon":"🏆"},
-    {"label":"Over 2.5 gólů","prob":58,"odds":"1.85","value":false,"icon":"⚽"},
-    {"label":"Obě týmy skórují","prob":52,"odds":"1.75","value":true,"icon":"🎯"},
-    {"label":"Domácí handicap -1","prob":40,"odds":"2.20","value":false,"icon":"📊"}
+    {"label":"1X2: Domácí vyhraje","prob":65,"odds":"1.55","value":true,"icon":"🏆","reason":"1 věta proč"},
+    {"label":"Over 2.5 gólů","prob":58,"odds":"1.85","value":false,"icon":"⚽","reason":"1 věta proč"},
+    {"label":"Obě týmy skórují","prob":52,"odds":"1.75","value":true,"icon":"🎯","reason":"1 věta proč"},
+    {"label":"Domácí handicap -1","prob":40,"odds":"2.20","value":false,"icon":"📊","reason":"1 věta proč"}
   ],
-  "bestBet": "Krátký popis nejlepšího tipu max 60 znaků",
-  "analysis": "Stručná analýza zápasu oddělená /par/",
+  "bestBet": "Nejlepší tip max 60 znaků",
+  "form": {"home":"VVPRV","away":"PVVPP"},
+  "h2h": "Popis vzájemných zápasů v 1-2 větách",
+  "injuries": "Klíčová zranění v 1-2 větách nebo Nejsou známa",
+  "analysis": "Celková analýza oddělená /par/ (2-3 odstavce)",
   "risks": "Hlavní riziko v 1 větě",
-  "sources": ["zdroj1","zdroj2"]
+  "sources": ["zdroj1","zdroj2","zdroj3"]
 }
-PRAVIDLA: tips seřazené od nejvyšší pravděpodobnosti, prob = 0-100, value=true pokud je pravděpodobnost vyšší než implikuje kurz (value bet), sources max 3. Datum: ${today}.`;
+Datum: ${today}. Buď konkrétní, ne obecný.`;
 
   const userMsg = `Analyzuj zápas: ${selectedMatch.home} vs ${selectedMatch.away}
-Liga: ${selectedMatch.league}
+Liga: ${selectedMatch.league} ${selectedMatch.country ? '('+selectedMatch.country+')' : ''}
 Sport: ${currentSport}
-${isLiveMatch ? 'Aktuální skóre: '+selectedMatch.homeScore+':'+selectedMatch.awayScore+' (ŽIVĚ)' : ''}
-Datum/čas: ${selectedMatch.time}
-Poskytni top sázkové tipy s pravděpodobnostmi.`;
+${isLiveMatch ? 'Skóre: '+selectedMatch.homeScore+':'+selectedMatch.awayScore+' (ŽIVĚ '+selectedMatch.minute+')' : 'Čas: '+selectedMatch.time}
+Prohledej web a poskytni detailní analýzu s konkrétními tipy a pravděpodobnostmi.`;
 
   try {
     const res = await fetch('/api/analyze', {
@@ -528,11 +616,25 @@ function renderAnalysis(r) {
               <div style="background:${tip.prob>60?'var(--accent)':tip.prob>40?'var(--warn)':'var(--danger)'};height:100%;width:${tip.prob}%;transition:width .6s ease;border-radius:4px;"></div>
             </div>
             <div style="font-size:11px;color:var(--muted);">Pravděpodobnost: <b style="color:var(--text);">${tip.prob}%</b>${tip.odds ? ' · Kurz: <b style="color:var(--text);">'+tip.odds+'</b>' : ''}</div>
+            ${tip.reason ? `<div style="font-size:11px;color:var(--muted);margin-top:2px;">💬 ${tip.reason}</div>` : ''}
           </div>
         </div>
       `).join('')}
 
       <div style="font-size:13px;line-height:1.8;color:var(--muted);margin:12px 0;padding:12px;background:var(--surface2);border-radius:8px;">${(r.analysis||'').split('/par/').map(p=>`<p style="margin-bottom:8px;">${p.trim()}</p>`).join('')}</div>
+
+      ${r.form ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+  <div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center;">
+    <div style="font-size:10px;color:var(--muted);margin-bottom:4px;">FORMA · DOMÁCÍ</div>
+    <div style="font-family:var(--mono);letter-spacing:2px;">${(r.form.home||'').split('').map(c=>c==='V'?'<span style="color:#00e5a0">V</span>':c==='P'?'<span style="color:#ef4444">P</span>':'<span style="color:#f59e0b">R</span>').join('')}</div>
+  </div>
+  <div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center;">
+    <div style="font-size:10px;color:var(--muted);margin-bottom:4px;">FORMA · HOSTÉ</div>
+    <div style="font-family:var(--mono);letter-spacing:2px;">${(r.form.away||'').split('').map(c=>c==='V'?'<span style="color:#00e5a0">V</span>':c==='P'?'<span style="color:#ef4444">P</span>':'<span style="color:#f59e0b">R</span>').join('')}</div>
+  </div>
+</div>` : ''}
+      ${r.h2h ? `<div style="background:var(--surface2);border-radius:8px;padding:10px;font-size:12px;color:var(--muted);margin-bottom:8px;">⚔️ <b style="color:var(--text)">H2H:</b> ${r.h2h}</div>` : ''}
+      ${r.injuries ? `<div style="background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.15);border-radius:8px;padding:10px;font-size:12px;color:var(--muted);margin-bottom:8px;">🩹 <b style="color:#fca5a5">Zranění:</b> ${r.injuries}</div>` : ''}
 
       ${r.risks ? `<div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:10px 12px;font-size:12px;color:#fca5a5;margin-bottom:10px;">⚠️ ${r.risks}</div>` : ''}
 
