@@ -10,7 +10,7 @@
 <!-- PWA -->
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#0a0d12">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
 :root {
@@ -339,20 +339,22 @@ main{flex:1;max-width:680px;width:100%;margin:0 auto;padding:16px 12px 80px;}
 <script>
 // ── SUPABASE INIT ─────────────────────────────────────────────────────────────
 const SUPABASE_URL = 'https://hnfxeskhhuesgpvgvskl.supabase.co';
-// Publishable (anon) key — je bezpečné mít v kódu (je to veřejný klíč)
-// Secret key NIKDY do frontendu!
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_892PHsw5h2wkg-gDXOpguw_ygPZTV9n';
 
-let supabaseClient = null;
 let currentUser = null;
 let userProfile = null;
 let authToken = null;
 let authMode = 'login';
 
-function initSupabase(publishableKey) {
-  if (!publishableKey || publishableKey === 'SUPABASE_PUBLISHABLE_KEY_PLACEHOLDER') return;
-  supabaseClient = window.supabase.createClient(SUPABASE_URL, publishableKey);
-}
+// Inicializuj Supabase okamžitě (ne až v DOMContentLoaded)
+// aby zachytil #access_token hash z Google OAuth redirectu
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  auth: {
+    detectSessionInUrl: true,
+    persistSession: true,
+    autoRefreshToken: true,
+  }
+});
 
 // ── AUTH FUNCTIONS ────────────────────────────────────────────────────────────
 function openAuth() { document.getElementById('authOverlay').classList.add('open'); }
@@ -367,8 +369,10 @@ function toggleAuthMode() {
 }
 
 async function loginGoogle() {
-  if (!supabaseClient) return;
-  await supabaseClient.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.href } });
+  await supabaseClient.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: 'https://betiq-nine.vercel.app/' }
+  });
 }
 
 async function authAction() {
@@ -942,8 +946,6 @@ function renderAnalysis(r) {
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
-  initSupabase(SUPABASE_PUBLISHABLE_KEY);
-
   // Naslouchej změnám auth stavu (včetně Google OAuth redirectu)
   supabaseClient.auth.onAuthStateChange(async (event, session) => {
     if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
