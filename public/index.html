@@ -187,21 +187,8 @@ main{flex:1;max-width:680px;width:100%;margin:0 auto;padding:16px 12px 80px;}
       <div class="modal-meta" id="modalMeta">—</div>
     </div>
 
-    <div class="modal-section">
-      <div class="modal-label">Typ sázky</div>
-      <div class="bet-chips" id="betChips">
-        <div class="bet-chip active" onclick="selectChip(this,'Vítěz zápasu')">🏆 Vítěz</div>
-        <div class="bet-chip" onclick="selectChip(this,'Obě týmy skórují')">⚽ Obě skórují</div>
-        <div class="bet-chip" onclick="selectChip(this,'Over 2.5 gólů')">📊 Over 2.5</div>
-        <div class="bet-chip" onclick="selectChip(this,'Under 2.5 gólů')">📊 Under 2.5</div>
-        <div class="bet-chip" onclick="selectChip(this,'Asijský handicap')">🎯 Handicap</div>
-        <div class="bet-chip" onclick="selectChip(this,'Vlastní...')">✏️ Vlastní</div>
-      </div>
-      <input type="text" class="modal-input" id="betCustom" placeholder="nebo napiš vlastní typ sázky..." style="margin-top:8px;display:none;">
-    </div>
-
     <button class="modal-btn" id="analyzeBtn" onclick="runAnalysis()" style="font-size:16px;padding:15px;">
-      ⚡ Udělat analýzu
+      ⚡ Analyzovat zápas
     </button>
 
     <div id="analysisResult"></div>
@@ -217,7 +204,6 @@ let currentTab = 'live';
 let currentSport = 'all';
 let allMatches = [];
 let selectedMatch = null;
-let selectedBet = 'Vítěz zápasu';
 
 // ── TAB SWITCH ──────────────────────────────────────────────────────────────
 function switchTab(tab) {
@@ -430,11 +416,6 @@ function openModal(idx, autoAnalyze = false) {
 
   document.getElementById('analysisResult').innerHTML = '';
   document.getElementById('analyzeBtn').disabled = false;
-  // Reset chips
-  document.querySelectorAll('.bet-chip').forEach(c=>c.classList.remove('active'));
-  document.querySelector('.bet-chip').classList.add('active');
-  selectedBet = 'Vítěz zápasu';
-  document.getElementById('betCustom').style.display = 'none';
   document.getElementById('modalOverlay').classList.add('open');
   document.body.style.overflow = 'hidden';
 
@@ -452,39 +433,38 @@ function closeModalOutside(e) {
   if(e.target === document.getElementById('modalOverlay')) closeModal();
 }
 
-function selectChip(chip, bet) {
-  document.querySelectorAll('.bet-chip').forEach(c=>c.classList.remove('active'));
-  chip.classList.add('active');
-  selectedBet = bet;
-  document.getElementById('betCustom').style.display = bet === 'Vlastní...' ? 'block' : 'none';
-}
-
 // ── ANALYSIS ──────────────────────────────────────────────────────────────────
 async function runAnalysis() {
   if(!selectedMatch) return;
   const btn = document.getElementById('analyzeBtn');
   btn.disabled = true;
-  const betType = selectedBet === 'Vlastní...'
-    ? document.getElementById('betCustom').value.trim() || 'Vítěz zápasu'
-    : selectedBet;
 
   document.getElementById('analysisResult').innerHTML = `<div class="modal-loading"><div class="spinner" style="margin:0 auto 12px;width:28px;height:28px;border-width:2px"></div>AI analyzuje zápas a hledá aktuální informace...</div>`;
 
   const today = new Date().toLocaleDateString('cs-CZ');
   const isLiveMatch = isLive(selectedMatch.status);
-  const scoreInfo = isLiveMatch ? `Aktuální skóre: ${selectedMatch.homeScore}:${selectedMatch.awayScore} (${selectedMatch.minute ? selectedMatch.minute+"'" : 'ŽIVĚ'})` : '';
 
-  const systemPrompt = `Jsi expertni sportovni analytik. Pouzivej web search pro aktualni informace.
-Vrat POUZE validni JSON (bez markdown):
-{"verdict":"doporuceni max 55 znaku","confidence":72,"verdictIcon":"🎯","factors":[{"icon":"🩺","name":"Zraneni","value":"popis","type":"negative"}],"analysis":"analyza odstavce oddelene /par/","risks":[{"label":"Nejistota","value":45,"color":"#f59e0b"}],"sources":["zdroj 1"]}
-PRAVIDLA: zadne uvozovky uvnitr stringu, factors max 5, risks max 3, sources max 3, confidence 0-100. Datum: ${today}.`;
+  const systemPrompt = `Jsi expertní sázkový analytik. Použij web search pro aktuální informace.
+Vrať POUZE validní JSON (bez markdown):
+{
+  "tips": [
+    {"label":"1X2: Domácí vyhraje","prob":65,"odds":"1.55","value":true,"icon":"🏆"},
+    {"label":"Over 2.5 gólů","prob":58,"odds":"1.85","value":false,"icon":"⚽"},
+    {"label":"Obě týmy skórují","prob":52,"odds":"1.75","value":true,"icon":"🎯"},
+    {"label":"Domácí handicap -1","prob":40,"odds":"2.20","value":false,"icon":"📊"}
+  ],
+  "bestBet": "Krátký popis nejlepšího tipu max 60 znaků",
+  "analysis": "Stručná analýza zápasu oddělená /par/",
+  "risks": "Hlavní riziko v 1 větě",
+  "sources": ["zdroj1","zdroj2"]
+}
+PRAVIDLA: tips seřazené od nejvyšší pravděpodobnosti, prob = 0-100, value=true pokud je pravděpodobnost vyšší než implikuje kurz (value bet), sources max 3. Datum: ${today}.`;
 
-  const userMsg = `Analyzuj: ${selectedMatch.home} vs ${selectedMatch.away}
+  const userMsg = `Analyzuj zápas: ${selectedMatch.home} vs ${selectedMatch.away}
 Liga: ${selectedMatch.league}
-${scoreInfo}
-Typ sazky: ${betType}
-${isLiveMatch ? 'Zapas PRAVE PROBIHA - zohledni aktualni vyvoj.' : ''}
-Vrat JSON analyzu.`;
+${isLiveMatch ? 'Aktuální skóre: '+selectedMatch.homeScore+':'+selectedMatch.awayScore+' (ŽIVĚ)' : ''}
+Datum/čas: ${selectedMatch.time}
+Poskytni top sázkové tipy s pravděpodobnostmi.`;
 
   try {
     const res = await fetch('/api/analyze', {
@@ -517,36 +497,33 @@ Vrat JSON analyzu.`;
 }
 
 function renderAnalysis(r) {
-  const conf = Math.min(100,Math.max(0,r.confidence||50));
-  const colors = {positive:'#00e5a0',negative:'#ef4444',neutral:'#6b7a99'};
-
-  const factors = (r.factors||[]).map(f=>`
-    <div class="factor-pill">
-      <span class="fi">${f.icon||'•'}</span>
-      <div><div class="fn" style="color:${colors[f.type]||colors.neutral}">${f.name}</div><div class="fv">${f.value}</div></div>
-    </div>`).join('');
-
-  const parts = (r.analysis||'').split('/par/').map(p=>p.trim()).filter(Boolean);
-  const analysisHtml = parts.map(p=>`<p>${p}</p>`).join('');
-
   document.getElementById('analysisResult').innerHTML = `
     <div class="result-section">
-      <div class="verdict-row">
-        <div class="verdict-icon">${r.verdictIcon||'🎯'}</div>
-        <div>
-          <div class="verdict-label">DOPORUČENÍ</div>
-          <div class="verdict-text">${r.verdict||'—'}</div>
-        </div>
-        <div class="conf-right">
-          <div class="conf-bar-wrap"><div class="conf-bar" id="cbar" style="width:0%"></div></div>
-          <div class="conf-val">${conf}%</div>
-        </div>
+      <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:10px;padding:12px 14px;margin-bottom:14px;">
+        <div style="font-size:11px;color:var(--accent);font-family:var(--mono);letter-spacing:.08em;margin-bottom:4px;">⚡ NEJLEPŠÍ TIP</div>
+        <div style="font-size:15px;font-weight:700;">${r.bestBet||'—'}</div>
       </div>
-      <div class="factors-wrap">${factors}</div>
-      <div class="analysis-text">${analysisHtml}</div>
+
+      ${(r.tips||[]).map(tip => `
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;">
+          <div style="font-size:22px;">${tip.icon}</div>
+          <div style="flex:1;">
+            <div style="font-size:14px;font-weight:600;margin-bottom:4px;">${tip.label} ${tip.value ? '<span style="background:#00e5a020;border:1px solid var(--accent);color:var(--accent);font-size:10px;padding:1px 6px;border-radius:10px;margin-left:4px;">VALUE</span>' : ''}</div>
+            <div style="background:var(--border);border-radius:4px;height:6px;margin-bottom:4px;overflow:hidden;">
+              <div style="background:${tip.prob>60?'var(--accent)':tip.prob>40?'var(--warn)':'var(--danger)'};height:100%;width:${tip.prob}%;transition:width .6s ease;border-radius:4px;"></div>
+            </div>
+            <div style="font-size:11px;color:var(--muted);">Pravděpodobnost: <b style="color:var(--text);">${tip.prob}%</b>${tip.odds ? ' · Kurz: <b style="color:var(--text);">'+tip.odds+'</b>' : ''}</div>
+          </div>
+        </div>
+      `).join('')}
+
+      <div style="font-size:13px;line-height:1.8;color:var(--muted);margin:12px 0;padding:12px;background:var(--surface2);border-radius:8px;">${(r.analysis||'').split('/par/').map(p=>`<p style="margin-bottom:8px;">${p.trim()}</p>`).join('')}</div>
+
+      ${r.risks ? `<div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:10px 12px;font-size:12px;color:#fca5a5;margin-bottom:10px;">⚠️ ${r.risks}</div>` : ''}
+
+      ${r.sources?.length ? `<div style="font-size:11px;color:var(--muted);">Zdroje: ${r.sources.join(' · ')}</div>` : ''}
     </div>`;
 
-  setTimeout(()=>{ const b=document.getElementById('cbar'); if(b) b.style.width=conf+'%'; },100);
   document.getElementById('modal').scrollTo({top:999,behavior:'smooth'});
 }
 

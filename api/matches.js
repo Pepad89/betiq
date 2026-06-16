@@ -32,7 +32,7 @@ export default async function handler(req, res) {
         try {
           const response = await fetch(`https://${HOST}/football-get-matches-by-date?date=${dateStr}`, { headers });
           const data = await response.json();
-          const items = data.response || data.data || data.matches || [];
+          const items = data.response?.matches || data.response?.live || [];
           if (Array.isArray(items)) {
             items.forEach(item => { item._fetchDate = date.toISOString().split('T')[0]; });
             allFixtures.push(...items);
