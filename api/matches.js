@@ -2,58 +2,39 @@ export default async function handler(req, res) {
   const apiKey = process.env.RAPIDAPI_KEY;
   if (!apiKey) return res.status(500).json({ error: 'RAPIDAPI_KEY není nastaven' });
 
-  const HOST = 'free-api-live-football-data.p.rapidapi.com';
-  const headers = {
-    'x-rapidapi-key': apiKey,
-    'x-rapidapi-host': HOST,
-  };
+  const HOST = 'sofascore.p.rapidapi.com';
+  const headers = { 'x-rapidapi-key': apiKey, 'x-rapidapi-host': HOST };
 
-  // Formát data pro toto API: YYYYMMDD (bez pomlček)
-  function toAPIDate(date) {
-    return date.toISOString().split('T')[0].replace(/-/g, '');
-  }
-
-  const { type } = req.query;
+  const { type, sport = 'football' } = req.query;
+  const validSports = ['football','basketball','tennis','ice-hockey','baseball','american-football'];
+  const sportKey = validSports.includes(sport) ? sport : 'football';
 
   try {
     if (type === 'live') {
-      const response = await fetch(`https://${HOST}/football-current-live`, { headers });
-      const data = await response.json();
-      return res.status(200).json(data);
-
+      const r = await fetch(`https://${HOST}/sport/${sportKey}/events/live`, { headers });
+      return res.status(200).json(await r.json());
     } else if (type === 'future') {
-      const allFixtures = [];
+      const all = [];
       const today = new Date();
-
-      for (let i = 1; i <= 7; i++) {
-        const date = new Date(today);
-        date.setDate(today.getDate() + i);
-        const dateStr = toAPIDate(date);
+      for (let i = 1; i <= 5; i++) {
+        const d = new Date(today);
+        d.setDate(today.getDate() + i);
+        const dateStr = d.toISOString().split('T')[0];
         try {
-          const response = await fetch(`https://${HOST}/football-get-matches-by-date?date=${dateStr}`, { headers });
-          const data = await response.json();
-          const items = data.response?.matches || data.response?.live || [];
-          if (Array.isArray(items)) {
-            items.forEach(item => { item._fetchDate = date.toISOString().split('T')[0]; });
-            allFixtures.push(...items);
-          }
-        } catch (e) {
-          console.error(`Error fetching ${dateStr}:`, e.message);
-        }
+          const r = await fetch(`https://${HOST}/sport/${sportKey}/scheduled-events/${dateStr}`, { headers });
+          const data = await r.json();
+          const items = data.events || [];
+          items.forEach(item => { item._fetchDate = dateStr; });
+          all.push(...items);
+        } catch(e) {}
       }
-
-      return res.status(200).json({ response: allFixtures });
-
+      return res.status(200).json({ events: all });
     } else {
-      // upcoming — dnešní zápasy
-      const today = new Date();
-      const dateStr = toAPIDate(today);
-      const response = await fetch(`https://${HOST}/football-get-matches-by-date?date=${dateStr}`, { headers });
-      const data = await response.json();
-      return res.status(200).json(data);
+      const today = new Date().toISOString().split('T')[0];
+      const r = await fetch(`https://${HOST}/sport/${sportKey}/scheduled-events/${today}`, { headers });
+      return res.status(200).json(await r.json());
     }
-
-  } catch (err) {
+  } catch(err) {
     return res.status(500).json({ error: err.message });
   }
 }

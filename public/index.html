@@ -161,8 +161,12 @@ main{flex:1;max-width:680px;width:100%;margin:0 auto;padding:16px 12px 80px;}
 
 <main>
   <div class="sport-filter" id="sportFilter">
-    <button class="sf-btn active" data-sport="all" onclick="filterSport(this)">🌍 Vše</button>
-    <button class="sf-btn" data-sport="football" onclick="filterSport(this)">⚽ Fotbal</button>
+    <button class="sf-btn active" data-sport="football" onclick="filterSport(this)">⚽ Fotbal</button>
+    <button class="sf-btn" data-sport="basketball" onclick="filterSport(this)">🏀 Basketbal</button>
+    <button class="sf-btn" data-sport="tennis" onclick="filterSport(this)">🎾 Tenis</button>
+    <button class="sf-btn" data-sport="ice-hockey" onclick="filterSport(this)">🏒 Hokej</button>
+    <button class="sf-btn" data-sport="baseball" onclick="filterSport(this)">⚾ Baseball</button>
+    <button class="sf-btn" data-sport="american-football" onclick="filterSport(this)">🏈 NFL</button>
   </div>
 
   <div id="matchList">
@@ -201,7 +205,7 @@ main{flex:1;max-width:680px;width:100%;margin:0 auto;padding:16px 12px 80px;}
 
 <script>
 let currentTab = 'live';
-let currentSport = 'all';
+let currentSport = 'football';
 let allMatches = [];
 let selectedMatch = null;
 
@@ -219,14 +223,14 @@ function filterSport(btn) {
   document.querySelectorAll('.sf-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   currentSport = btn.dataset.sport;
-  renderMatches();
+  loadMatches();
 }
 
 // ── LOAD MATCHES ─────────────────────────────────────────────────────────────
 async function loadMatches() {
   document.getElementById('matchList').innerHTML = `<div class="loading"><div class="spinner"></div><p>Načítám zápasy...</p></div>`;
   try {
-    const res = await fetch(`/api/matches?type=${currentTab}`);
+    const res = await fetch(`/api/matches?type=${currentTab}&sport=${currentSport}`);
     const data = await res.json();
     allMatches = parseMatches(data);
     renderMatches();
@@ -261,37 +265,45 @@ function parseMatches(data) {
   try {
     const matches = [];
 
-    // Tento API vrací: { status:"success", response: { matches: [...] } }
-    // nebo pro live: { status:"success", response: { live: [...] } }
+    // Sofascore format
     let items = [];
-    if (data.response?.matches) items = data.response.matches;
+    if (data.events) items = data.events;
+    else if (data.response?.matches) items = data.response.matches;
     else if (data.response?.live) items = data.response.live;
     else if (Array.isArray(data.response)) items = data.response;
-    else if (Array.isArray(data.data)) items = data.data;
-    else if (Array.isArray(data.matches)) items = data.matches;
 
     items.forEach(item => {
-      const home = item.home?.name || item.teams?.home?.name || 'Domácí';
-      const away = item.away?.name || item.teams?.away?.name || 'Hosté';
-      const homeScore = item.home?.score ?? item.goals?.home ?? '–';
-      const awayScore = item.away?.score ?? item.goals?.away ?? '–';
-      const league = item.league?.name || item.competition?.name || ('Liga #' + (item.leagueId || ''));
-      const country = item.league?.country || item.country?.name || '';
+      let home, away, homeScore, awayScore, league, country, statusKey, minute, time, fetchDate;
 
-      // Status normalizace pro tento API
-      const s = item.status || {};
-      let statusKey;
-      if (s.finished) statusKey = s.reason?.short || 'FT';
-      else if (s.cancelled) statusKey = 'PP';
-      else if (s.started && !s.finished) statusKey = 'LIVE';
-      else statusKey = 'NS';
+      if (item.homeTeam) {
+        // Sofascore format
+        home = item.homeTeam.name;
+        away = item.awayTeam.name;
+        homeScore = item.homeScore?.current ?? '–';
+        awayScore = item.awayScore?.current ?? '–';
+        league = item.tournament?.name || 'Sport';
+        country = item.tournament?.category?.country?.name || '';
+        const st = item.status?.type;
+        statusKey = st === 'inprogress' ? 'LIVE' : st === 'finished' ? 'FT' : 'NS';
+        minute = item.status?.description || null;
+        time = item.startTimestamp ? new Date(item.startTimestamp * 1000).toISOString() : '';
+        fetchDate = item._fetchDate || (time ? time.split('T')[0] : '');
+      } else {
+        // Old API format (football-specific)
+        home = item.home?.name || 'Domácí';
+        away = item.away?.name || 'Hosté';
+        homeScore = item.home?.score ?? '–';
+        awayScore = item.away?.score ?? '–';
+        league = 'Liga #' + (item.leagueId || '');
+        country = '';
+        const s = item.status || {};
+        statusKey = s.finished ? (s.reason?.short || 'FT') : s.cancelled ? 'PP' : s.started ? 'LIVE' : 'NS';
+        minute = null;
+        time = item.status?.utcTime || '';
+        fetchDate = item._fetchDate || '';
+      }
 
-      const minute = item.status?.elapsed || null;
-      // Čas: API vrací "16.06.2026 17:00" → převedeme na ISO
-      const rawTime = item.status?.utcTime || item.time || '';
-      const fetchDate = item._fetchDate || (item.status?.utcTime ? item.status.utcTime.split('T')[0] : '');
-
-      matches.push({ home, away, homeScore, awayScore, league, country, status: statusKey, minute, time: rawTime, fetchDate, raw: item });
+      matches.push({ home, away, homeScore, awayScore, league, country, status: statusKey, minute, time, fetchDate, raw: item });
     });
 
     return matches;
@@ -374,6 +386,8 @@ function renderMatches() {
 }
 
 function matchCard(m, idx, live) {
+  const sportIcons = { football:'⚽', basketball:'🏀', tennis:'🎾', 'ice-hockey':'🏒', baseball:'⚾', 'american-football':'🏈' };
+  const sportIcon = sportIcons[currentSport] || '🏅';
   const scoreDisplay = (m.homeScore !== undefined && m.homeScore !== '–')
     ? `<div class="score ${live?'live-score':''}">${m.homeScore}:${m.awayScore}</div>`
     : `<div class="score" style="color:var(--muted);font-size:16px;">vs</div>`;
@@ -384,7 +398,7 @@ function matchCard(m, idx, live) {
   else statusText = `<div class="match-status upcoming">${formatTime(m.time) || 'Dnes'}</div>`;
 
   return `<div class="match-card ${live?'live':''}" onclick="openModal(${idx})">
-    <div class="match-league"><span class="league-flag">⚽</span>${m.league}${m.country?' · '+m.country:''}</div>
+    <div class="match-league"><span class="league-flag">${sportIcon}</span>${m.league}${m.country?' · '+m.country:''}</div>
     <div class="match-teams">
       <div class="team"><div class="team-name">${m.home}</div></div>
       <div class="score-box">${scoreDisplay}${statusText}</div>
@@ -462,6 +476,7 @@ PRAVIDLA: tips seřazené od nejvyšší pravděpodobnosti, prob = 0-100, value=
 
   const userMsg = `Analyzuj zápas: ${selectedMatch.home} vs ${selectedMatch.away}
 Liga: ${selectedMatch.league}
+Sport: ${currentSport}
 ${isLiveMatch ? 'Aktuální skóre: '+selectedMatch.homeScore+':'+selectedMatch.awayScore+' (ŽIVĚ)' : ''}
 Datum/čas: ${selectedMatch.time}
 Poskytni top sázkové tipy s pravděpodobnostmi.`;
