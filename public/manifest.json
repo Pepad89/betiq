@@ -1,14 +1,51 @@
 {
   "name": "BetIQ - AI Sázkový Asistent",
   "short_name": "BetIQ",
-  "description": "AI analýzy sportovních zápasů",
+  "description": "AI analýzy sportovních zápasů pro chytřejší sázení",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0d12",
   "theme_color": "#0a0d12",
-  "orientation": "portrait",
+  "orientation": "portrait-primary",
+  "categories": ["sports", "entertainment"],
+  "lang": "cs",
   "icons": [
-    { "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230a0d12'/><circle cx='20' cy='50' r='8' fill='%2300e5a0'/><text x='50' y='65' font-size='45' font-family='monospace' font-weight='bold' fill='%2300e5a0' text-anchor='middle'>IQ</text></svg>", "sizes": "192x192", "type": "image/svg+xml" },
-    { "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230a0d12'/><circle cx='20' cy='50' r='8' fill='%2300e5a0'/><text x='50' y='65' font-size='45' font-family='monospace' font-weight='bold' fill='%2300e5a0' text-anchor='middle'>IQ</text></svg>", "sizes": "512x512", "type": "image/svg+xml" }
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230a0d12'/><circle cx='20' cy='50' r='8' fill='%2300e5a0'/><text x='55' y='65' font-size='45' font-family='monospace' font-weight='bold' fill='%2300e5a0' text-anchor='middle'>IQ</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230a0d12'/><circle cx='20' cy='50' r='8' fill='%2300e5a0'/><text x='55' y='65' font-size='45' font-family='monospace' font-weight='bold' fill='%2300e5a0' text-anchor='middle'>IQ</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "data:image/png;base64,iVBORw0KGgo=",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "BetIQ - Dnešní zápasy"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dnes",
+      "short_name": "Dnes",
+      "description": "Dnešní zápasy",
+      "url": "/?tab=live",
+      "icons": [{ "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='20' font-size='20'>📺</text></svg>", "sizes": "96x96" }]
+    },
+    {
+      "name": "Budoucí",
+      "short_name": "Budoucí",
+      "description": "Budoucí zápasy",
+      "url": "/?tab=future",
+      "icons": [{ "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='20' font-size='20'>📅</text></svg>", "sizes": "96x96" }]
+    }
   ]
 }
