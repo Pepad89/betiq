@@ -176,7 +176,6 @@ main{flex:1;max-width:680px;width:100%;margin:0 auto;padding:16px 12px 80px;}
 
 <main>
   <div class="date-picker" id="datePicker" style="display:none;"></div>
-  <div class="league-filter" id="leagueFilter" style="display:none;"></div>
 
   <div class="sport-filter" id="sportFilter">
     <button class="sf-btn active" data-sport="football" onclick="filterSport(this)">⚽ Fotbal</button>
@@ -185,7 +184,10 @@ main{flex:1;max-width:680px;width:100%;margin:0 auto;padding:16px 12px 80px;}
     <button class="sf-btn" data-sport="ice-hockey" onclick="filterSport(this)">🏒 Hokej</button>
     <button class="sf-btn" data-sport="baseball" onclick="filterSport(this)">⚾ Baseball</button>
     <button class="sf-btn" data-sport="american-football" onclick="filterSport(this)">🏈 NFL</button>
+    <button class="sf-btn" data-sport="volleyball" onclick="filterSport(this)">🏐 Volejbal</button>
   </div>
+
+  <div class="league-filter" id="leagueFilter" style="display:none;"></div>
 
   <div id="matchList">
     <div class="loading">
